@@ -15,3 +15,5 @@ fi
 
 
 # Copiar el hook en .git/hooks con el nombre commit-msg
+# No olvies darle permisos de ejecución con:
+# chmod +x .git/hooks/commit-msg
