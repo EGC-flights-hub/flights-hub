@@ -39,8 +39,8 @@ jobs:
         run: flake8 app rosemary core
 
       # Step 5: Verify code formatting with Black
-      # - name: Check formatting with black
-      # run: black --check app rosemary core
+      - name: Check formatting with black
+        run: black --check app rosemary core
 
       # Step 6: Verify import ordering with isort
       - name: Check import order with isort
