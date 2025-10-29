@@ -1,0 +1,19 @@
+#!/bin/bash
+
+
+# Leemos el mensaje del commit desde el archivo temporalque Git genera
+mensaje_commit=$(cat "$1")
+
+# Verificamos si el mensaje de commit cumple con el formato
+if ! [[ "$mensaje_commit" =~ ^(feat|fix|docs|style|test|perf|ci|cd): ]]; then
+ echo "ERROR: commit message must start with one
+of those prefixes: feat:, fix:, docs:, style:, test:, perf:, ci:, cd:"
+ echo " "
+ echo "Check the team documentation to know which fits with your commit"
+ exit 1 # Evitar el commit si el formato es incorrecto
+fi
+
+
+# Copiar el hook en .git/hooks con el nombre commit-msg
+# No olvies darle permisos de ejecución con:
+# chmod +x .git/hooks/commit-msg

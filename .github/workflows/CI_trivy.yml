@@ -1,0 +1,33 @@
+name: Trivy IaC Scan
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v*'
+
+jobs:
+  trivy_scan:
+    name: Ejecutar escaneo IaC con Trivy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Instalar Trivy
+        run: |
+          latest_version=$(curl -s https://api.github.com/repos/aquasecurity/trivy/releases/latest | jq -r '.tag_name')
+          wget "https://github.com/aquasecurity/trivy/releases/download/${latest_version}/trivy_${latest_version:1}_Linux-64bit.deb"
+          sudo dpkg -i "trivy_${latest_version:1}_Linux-64bit.deb"
+
+      - name: Ejecutar escaneo Trivy en archivos IaC (JSON)
+        run: |
+          trivy fs --format json --output trivy-report.json .
+
+      - name: Subir reporte como artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy-report.json
