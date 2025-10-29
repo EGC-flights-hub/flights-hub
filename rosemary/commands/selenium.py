@@ -2,6 +2,7 @@ import os
 import subprocess
 
 import click
+
 import core.selenium.common as driver_selector
 
 
