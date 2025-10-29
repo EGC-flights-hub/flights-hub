@@ -44,4 +44,4 @@ jobs:
 
       # Step 6: Verify import ordering with isort
       - name: Check import order with isort
-        run: isort --check-only app rosemary core
+        run: isort --check-only --diff app rosemary core
