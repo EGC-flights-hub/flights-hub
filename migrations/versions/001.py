@@ -62,6 +62,7 @@ def upgrade():
     sa.Column('dataset_doi', sa.String(length=120), nullable=True),
     sa.Column('tags', sa.String(length=120), nullable=True),
     sa.Column('ds_metrics_id', sa.Integer(), nullable=True),
+    sa.Column('downloads', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['ds_metrics_id'], ['ds_metrics.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

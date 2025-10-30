@@ -62,6 +62,7 @@ class DSMetaData(db.Model):
     ds_metrics_id = db.Column(db.Integer, db.ForeignKey("ds_metrics.id"))
     ds_metrics = db.relationship("DSMetrics", uselist=False, backref="ds_meta_data", cascade="all, delete")
     authors = db.relationship("Author", backref="ds_meta_data", lazy=True, cascade="all, delete")
+    downloads = db.Column(db.Integer, default=0, server_default="0", nullable=False)
 
 
 class DataSet(db.Model):
@@ -125,6 +126,7 @@ class DataSet(db.Model):
             "files_count": self.get_files_count(),
             "total_size_in_bytes": self.get_file_total_size(),
             "total_size_in_human_format": self.get_file_total_size_for_human(),
+            "downloads": int(self.ds_meta_data.downloads),
         }
 
     def __repr__(self):
