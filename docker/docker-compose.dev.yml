@@ -84,7 +84,6 @@ services:
     networks:
       - uvlhub_network
 
-
 volumes:
   db_data:
 

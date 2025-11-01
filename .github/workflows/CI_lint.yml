@@ -40,8 +40,10 @@ jobs:
 
       # Step 5: Verify code formatting with Black
       - name: Check formatting with black
+
         run: black --check --diff app rosemary core
 
       # Step 6: Verify import ordering with isort
       - name: Check import order with isort
         run: isort --check-only --diff app rosemary core
+
