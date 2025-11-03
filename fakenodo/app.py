@@ -20,6 +20,7 @@ def create_record():
     new_record = {
         "id": new_id,
         "conceptrecid": new_concept_id_str,
+        "files_changed": False,
         "state": "unsubmitted",
         "metadata": {
             "prereserve_doi": {"doi": f"10.5281/zenodo.{new_id}"}
@@ -36,6 +37,15 @@ def create_record():
     
     return jsonify(new_record), 201
 
+@app.route('/api/deposit/depositions/<int:deposit_id>/files', methods=['POST'])
+def simulate_file_change(deposit_id):
+    record = db.get(deposit_id)
+    if not record:
+        return jsonify({"error": "Record not found"}), 404
+
+    record["files_changed"] = True
+    return jsonify({"message": "File change simulated"}), 200
+
 
 @app.route('/api/deposit/depositions/<int:deposit_id>/actions/publish', methods=['POST'])
 def publish_record(deposit_id):
@@ -46,8 +56,21 @@ def publish_record(deposit_id):
         return jsonify({"error": "Record not found"}), 404
 
     record["state"] = "published"
-    record["doi"] = record["metadata"]["prereserve_doi"]["doi"] 
     
+    if record["files_changed"]:
+        record["doi"] = f"10.5281/zenodo.{record['id']}"
+    else:
+        existing_doi = None
+        for r in db.values():
+            if r.get('conceptrecid') == record['conceptrecid'] and r.get('state') == 'published' and r.get('doi'):
+                existing_doi = r['doi']
+                break
+
+        if existing_doi:
+            record["doi"] = existing_doi 
+        else:
+            record["doi"] = f"10.5281/zenodo.{record['id']}"
+
     return jsonify(record), 202
 
 @app.route('/api/deposit/depositions', methods=['GET'])
