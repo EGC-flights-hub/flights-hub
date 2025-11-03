@@ -13,15 +13,20 @@ def health_check():
 @app.route('/api/deposit/depositions', methods=['POST'])
 def create_record():
     global next_id, next_concept_id
+    data = request.json or {}
+    metadata = data.get('metadata', {})
     
     new_id = next_id
-    new_concept_id_str = str(next_concept_id)
     
+    concept_id_str = metadata.get("conceptrecid")
+    if not concept_id_str:
+        concept_id_str = str(next_concept_id)
+        next_concept_id += 1 
     new_record = {
         "id": new_id,
-        "conceptrecid": new_concept_id_str,
-        "files_changed": False,
+        "conceptrecid": concept_id_str,
         "state": "unsubmitted",
+        "files_changed": False, 
         "metadata": {
             "prereserve_doi": {"doi": f"10.5281/zenodo.{new_id}"}
         },
@@ -33,8 +38,6 @@ def create_record():
     db[new_id] = new_record
     
     next_id += 1
-    next_concept_id += 1 
-    
     return jsonify(new_record), 201
 
 @app.route('/api/deposit/depositions/<int:deposit_id>/files', methods=['POST'])
@@ -56,7 +59,7 @@ def publish_record(deposit_id):
         return jsonify({"error": "Record not found"}), 404
 
     record["state"] = "published"
-    
+
     if record["files_changed"]:
         record["doi"] = f"10.5281/zenodo.{record['id']}"
     else:
