@@ -41,6 +41,12 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
+      
+      fakenodo:
+        # Construye la imagen desde el Dockerfile en el repo
+        build: ./fakenodo 
+        ports:
+          - 5001:5001
 
     steps:
       
@@ -66,5 +72,7 @@ jobs:
 
       # Step 5: Run the pytest test suite (ignoring Selenium tests)
       - name: Run Tests
+        env:
+          FAKENODO_URL: http://localhost:5001/api/deposit/depositions
 
         run: pytest app/modules/ --ignore-glob='*selenium*'
