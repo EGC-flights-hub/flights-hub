@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 
-class TestUploadanddownloadds():
+class TestUploadanddownloadds:
     def setup_method(self, method):
         self.driver = webdriver.Firefox()
         self.vars = {}
