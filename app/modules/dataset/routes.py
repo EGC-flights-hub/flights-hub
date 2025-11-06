@@ -229,7 +229,8 @@ def download_dataset(dataset_id):
             download_date=datetime.now(timezone.utc),
             download_cookie=user_cookie,
         )
-
+    dataset.ds_meta_data.downloads += 1
+    dataset_service.update_dsmetadata(dataset.ds_meta_data_id)
     return resp
 
 

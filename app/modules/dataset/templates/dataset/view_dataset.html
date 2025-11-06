@@ -330,6 +330,10 @@
             <i data-feather="download" class="center-button-icon"></i>
             Download all ({{ dataset.get_file_total_size_for_human() }})
         </a>
+	<div class="badge bg-secondary" style="border-radius: 5px;">
+	    <td>Downloads</td>
+	    <td>{{ dataset.ds_meta_data.downloads }}</td>
+	</div>
     </div>
     
 </div>
