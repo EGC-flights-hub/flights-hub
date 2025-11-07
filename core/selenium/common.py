@@ -60,8 +60,6 @@ def initialize_driver():
 
     else:
         raise Exception(f"Driver '{driver_name}' not supported.")
-
-
     return driver
 
 
@@ -70,4 +68,3 @@ def close_driver(driver):
     """Safely quit the browser."""
     if driver:
         driver.quit()
-
