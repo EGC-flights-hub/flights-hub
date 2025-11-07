@@ -1,7 +1,6 @@
 import os
 
 from selenium import webdriver
-
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from webdriver_manager.chrome import ChromeDriverManager
@@ -64,7 +63,6 @@ def initialize_driver():
 
 
 def close_driver(driver):
-
     """Safely quit the browser."""
     if driver:
         driver.quit()
