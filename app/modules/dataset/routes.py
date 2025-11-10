@@ -281,12 +281,12 @@ def dataset_badge_md(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
 
     # Pick up the data for the badge
-    DOI = dataset.get_uvlhub_doi() or "No DOI"
+    name = dataset.name()
     downloads = dataset.to_dict()["downloads"]
 
-    badge = f"![Downloads](https://img.shields.io/badge/{DOI}-{downloads}-green?style=for-the-badge)"
+    badge = f"![Downloads](https://img.shields.io/badge/{name}-{downloads}-green?style=for-the-badge)"
 
-    return badge, 200, {'Content-Type': 'text/plain'}
+    return badge, 200, {"Content-Type": "text/plain"}
 
 
 @dataset_bp.route("/dataset/<int:dataset_id>/badge/html", methods=["GET"])
@@ -297,12 +297,12 @@ def dataset_badge_html(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
 
     # Pick up the data for the badge
-    DOI = dataset.get_uvlhub_doi() or "No DOI"
+    name = dataset.name()
     downloads = dataset.to_dict()["downloads"]
 
-    link = f"https://img.shields.io/badge/{DOI}-{downloads}-green?style=for-the-badge"
+    link = f"https://img.shields.io/badge/{name}-{downloads}-green?style=for-the-badge"
     title = "Static Badge"
 
     badge = f"<img alt={title} src = {link}>"
 
-    return badge, 200, {'Content-Type': 'text/plain'}
+    return badge, 200, {"Content-Type": "text/plain"}
