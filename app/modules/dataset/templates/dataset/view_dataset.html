@@ -165,7 +165,7 @@
                     {{ dataset.get_uvlhub_doi() }}
                 </div>
 
-                <button type="button" class="btn doi_button btn-sm" onclick="copyText('dataset_doi_uvlhub')">
+                <button type="button" class="btn doi_button btn-sm" onclick="copyText('dataset_doi_uvlhub')" style="margin-bottom: 15px;">
                     <span class="button_doi_id">
                         <i data-feather="clipboard" class="center-button-icon" style="cursor: pointer"></i>
                         <b>DOI</b>
@@ -178,7 +178,14 @@
                 <div id="dataset_doi_uvlhub" style="display: none">
                     {{ dataset.get_uvlhub_doi() }}
                 </div>
-                
+
+                <button class="btn btn-light btn-sm" onclick="copyBadge('md')">
+                    <i data-feather="clipboard"></i> Copy Markdown Badge
+                </button> 
+                <button class="btn btn-light btn-sm" onclick="copyBadge('html')">
+                    <i data-feather="clipboard"></i> Copy HTML Badge
+                </button> 
+
             </div>
             {% endif %}
 
@@ -497,5 +504,25 @@
         });
     }
 </script>
+
+<script>
+function copyBadge(type) {
+    const datasetId = {{ dataset.id }};
+    const url = `/dataset/${datasetId}/badge/${type}`;
+
+    fetch(url)
+        .then(response => {
+            if (!response.ok) throw new Error("Network response was not ok");
+            return response.text();
+        })
+        .then(badgeText => {
+            navigator.clipboard.writeText(badgeText)
+                .catch(() => {}); 
+        })
+        .catch(() => {}); 
+}
+</script>
+
+
 
 {% endblock %}
