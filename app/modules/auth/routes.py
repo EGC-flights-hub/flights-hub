@@ -25,7 +25,7 @@ def show_signup_form():
     if form.validate_on_submit():
         email = form.email.data
         if not authentication_service.is_email_available(email):
-            return render_template("auth/signup_form.html", form=form, 
+            return render_template("auth/signup_form.html", form=form,
                                    error=f"Email {email} in use")
 
         try:
