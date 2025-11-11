@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from flask_login import current_user
@@ -28,8 +28,7 @@ class DSDownloadRecordRepository(BaseRepository):
         one_week_ago = datetime.utcnow() - timedelta(days=7)
         NUMBER_OF_TRENDING_DATASETS = 3
         return (
-            self.model.query
-            .join(DataSet, self.model.dataset_id == DataSet.id)
+            self.model.query.join(DataSet, self.model.dataset_id == DataSet.id)
             .join(DSMetaData, DataSet.ds_meta_data_id == DSMetaData.id)
             .filter(self.model.download_date >= one_week_ago)
             .with_entities(DSMetaData.title, func.count().label("download_count"))
@@ -37,7 +36,7 @@ class DSDownloadRecordRepository(BaseRepository):
             .order_by(desc("download_count"))
             .limit(NUMBER_OF_TRENDING_DATASETS)
             .all()
-            )
+        )
 
 
 class DSMetaDataRepository(BaseRepository):
