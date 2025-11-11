@@ -30,12 +30,12 @@ def test_dataset_id(test_client):
 def test_dataset_badge_md(test_client, test_dataset_id):
     response = test_client.get(f"/dataset/{test_dataset_id}/badge/md")
     assert response.status_code == 200
-    assert b"![Downloads]" in response.data
-    assert b"Test Dataset" in response.data
+    assert b"![Static Badge]" in response.data
+    assert b"Test_Dataset" in response.data
 
 
 def test_dataset_badge_html(test_client, test_dataset_id):
     response = test_client.get(f"/dataset/{test_dataset_id}/badge/html")
     assert response.status_code == 200
     assert b"<img" in response.data
-    assert b"Test Dataset" in response.data
+    assert b"Test_Dataset" in response.data
