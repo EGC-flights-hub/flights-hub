@@ -517,14 +517,12 @@ function copyBadge(type) {
         })
         .then(badgeText => {
             navigator.clipboard.writeText(badgeText)
-                .then(() => {
-                    alert(`${type.toUpperCase()} badge copied to clipboard!`);
-                })
-                .catch(err => console.error("Failed to copy badge: ", err));
+                .catch(() => {}); 
         })
-        .catch(err => console.error("Failed to fetch badge: ", err));
+        .catch(() => {}); 
 }
 </script>
+
 
 
 {% endblock %}
