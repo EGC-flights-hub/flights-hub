@@ -281,10 +281,10 @@ def dataset_badge_md(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
 
     # Pick up the data for the badge
-    name = dataset.name()
+    name = dataset.name().replace(" ", "_")
     downloads = dataset.to_dict()["downloads"]
 
-    badge = f"![Downloads](https://img.shields.io/badge/{name}-{downloads}-green?style=for-the-badge)"
+    badge = f"![Static Badge](https://img.shields.io/badge/{name}-{downloads}-green?style=for-the-badge)"
 
     return badge, 200, {"Content-Type": "text/plain"}
 
@@ -297,11 +297,11 @@ def dataset_badge_html(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
 
     # Pick up the data for the badge
-    name = dataset.name()
+    name = dataset.name().replace(" ", "_")
     downloads = dataset.to_dict()["downloads"]
 
     link = f"https://img.shields.io/badge/{name}-{downloads}-green?style=for-the-badge"
-    title = "Static Badge"
+    title = '"Static Badge"'
 
     badge = f"<img alt={title} src = {link}>"
 
