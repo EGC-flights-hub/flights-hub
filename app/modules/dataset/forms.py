@@ -22,8 +22,8 @@ class AuthorForm(FlaskForm):
         }
 
 
-class FeatureModelForm(FlaskForm):
-    uvl_filename = StringField("UVL Filename", validators=[DataRequired()])
+class CSVForm(FlaskForm):
+    csv_filename = StringField("CSV Filename", validators=[DataRequired()])
     title = StringField("Title", validators=[Optional()])
     desc = TextAreaField("Description", validators=[Optional()])
     publication_type = SelectField(
@@ -33,7 +33,7 @@ class FeatureModelForm(FlaskForm):
     )
     publication_doi = StringField("Publication DOI", validators=[Optional(), URL()])
     tags = StringField("Tags (separated by commas)")
-    version = StringField("UVL Version")
+    version = StringField("CSV Version")
     authors = FieldList(FormField(AuthorForm))
 
     class Meta:
@@ -42,15 +42,15 @@ class FeatureModelForm(FlaskForm):
     def get_authors(self):
         return [author.get_author() for author in self.authors]
 
-    def get_fmmetadata(self):
+    def get_csvmetadata(self):
         return {
-            "uvl_filename": self.uvl_filename.data,
+            "csv_filename": self.csv_filename.data,
             "title": self.title.data,
             "description": self.desc.data,
             "publication_type": self.publication_type.data,
             "publication_doi": self.publication_doi.data,
             "tags": self.tags.data,
-            "uvl_version": self.version.data,
+            "csv_version": self.version.data,
         }
 
 
@@ -66,7 +66,7 @@ class DataSetForm(FlaskForm):
     dataset_doi = StringField("Dataset DOI", validators=[Optional(), URL()])
     tags = StringField("Tags (separated by commas)")
     authors = FieldList(FormField(AuthorForm))
-    feature_models = FieldList(FormField(FeatureModelForm), min_entries=1)
+    csv_files = FieldList(FormField(CSVForm), min_entries=1, max_entries=1)
 
     submit = SubmitField("Submit")
 
@@ -92,5 +92,5 @@ class DataSetForm(FlaskForm):
     def get_authors(self):
         return [author.get_author() for author in self.authors]
 
-    def get_feature_models(self):
-        return [fm.get_feature_model() for fm in self.feature_models]
+    def get_csv_files(self):
+        return [file.get_csv_file() for file in self.csv_files]
