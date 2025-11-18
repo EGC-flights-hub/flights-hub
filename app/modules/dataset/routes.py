@@ -122,8 +122,12 @@ def upload():
     file = request.files["file"]
     temp_folder = current_user.temp_folder()
 
-    if not file or not file.filename.endswith(".uvl"):
+    if not file or not file.filename.endswith(".csv"):
         return jsonify({"message": "No valid file"}), 400
+
+    is_valid, error_message = DataSetService.validate_csv_content(file)
+    if not is_valid:
+        return jsonify({"message": error_message}), 400
 
     # create temp folder
     if not os.path.exists(temp_folder):
@@ -150,7 +154,7 @@ def upload():
     return (
         jsonify(
             {
-                "message": "UVL uploaded and validated successfully",
+                "message": "CSV uploaded and validated successfully",
                 "filename": new_filename,
             }
         ),
