@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import uuid
+import csv
 from typing import Optional
 
 from flask import request
@@ -143,6 +144,38 @@ class DataSetService(BaseService):
     def get_uvlhub_doi(self, dataset: DataSet) -> str:
         domain = os.getenv("DOMAIN", "localhost")
         return f"http://{domain}/doi/{dataset.ds_meta_data.dataset_doi}"
+
+    def validate_csv_content(file):
+
+        try:
+            file_contents = file.read().decode('utf-8').splitlines()
+            
+            if not file_contents:
+                return False, "CSV file is empty or not in UTF-8 format."
+
+            # Use the csv module to check structure
+            reader = csv.reader(file_contents)
+            header = next(reader)
+        
+            if not header or not any(header):
+                return False, "CSV header row cannot be empty."
+
+            # Check for at least one data row
+            try:
+                next(reader) 
+            except StopIteration:
+                return False, "CSV must contain a header and at least one data row."
+
+            file.seek(0)
+        
+            return True, None
+        
+        except UnicodeDecodeError:
+            file.seek(0)
+            return False, "Error: CSV file must be UTF-8 encoded."
+        except Exception as e:
+            file.seek(0)
+            return False, f"Error validating CSV content: {type(e).__name__}."
 
 
 class AuthorService(BaseService):
