@@ -149,27 +149,27 @@ class DataSetService(BaseService):
 
         try:
             file_contents = file.read().decode('utf-8').splitlines()
-            
+
             if not file_contents:
                 return False, "CSV file is empty or not in UTF-8 format."
 
             # Use the csv module to check structure
             reader = csv.reader(file_contents)
             header = next(reader)
-        
+
             if not header or not any(header):
                 return False, "CSV header row cannot be empty."
 
             # Check for at least one data row
             try:
-                next(reader) 
+                next(reader)
             except StopIteration:
                 return False, "CSV must contain a header and at least one data row."
 
             file.seek(0)
-        
+
             return True, None
-        
+
         except UnicodeDecodeError:
             file.seek(0)
             return False, "Error: CSV file must be UTF-8 encoded."
