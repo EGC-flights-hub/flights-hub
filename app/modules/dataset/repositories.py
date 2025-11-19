@@ -28,16 +28,18 @@ class DSDownloadRecordRepository(BaseRepository):
         one_week_ago = datetime.utcnow() - timedelta(days=7)
         NUMBER_OF_TRENDING_DATASETS = 3
         return (
-            self.model.query
-            .join(DataSet, self.model.dataset_id == DataSet.id)
+            self.model.query.join(DataSet, self.model.dataset_id == DataSet.id)
             .join(DSMetaData, DataSet.ds_meta_data_id == DSMetaData.id)
             .filter(self.model.download_date >= one_week_ago)
-            .with_entities(DSMetaData.title, func.count().label("download_count"))
-            .group_by(DSMetaData.title)
+            .with_entities(
+                DataSet,
+                func.count().label("download_count")
+            )
+            .group_by(DataSet)
             .order_by(desc("download_count"))
             .limit(NUMBER_OF_TRENDING_DATASETS)
             .all()
-            )
+         )
 
 
 class DSMetaDataRepository(BaseRepository):

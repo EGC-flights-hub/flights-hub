@@ -1,7 +1,11 @@
+import os
+
 from flask import render_template
 
 from app.modules.zenodo import zenodo_bp
 from app.modules.zenodo.services import ZenodoService
+
+FAKENODO_URL = os.environ.get("FAKENODO_URL")
 
 
 @zenodo_bp.route("/zenodo", methods=["GET"])

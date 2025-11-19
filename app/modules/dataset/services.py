@@ -48,7 +48,6 @@ class DataSetService(BaseService):
         self.hubfilerepository = HubfileRepository()
         self.dsviewrecord_repostory = DSViewRecordRepository()
         self.hubfileviewrecord_repository = HubfileViewRecordRepository()
-        self.dataset_service = DSDownloadRecordRepository()
 
     def move_feature_models(self, dataset: DataSet):
         current_user = AuthenticationService().get_authenticated_user()
@@ -93,8 +92,8 @@ class DataSetService(BaseService):
     def total_dataset_views(self) -> int:
         return self.dsviewrecord_repostory.total_dataset_views()
 
-    def trending_datasets(self) -> list[tuple[str, int]]:
-        return self.dataset_service.get_trending_datasets()
+    def trending_datasets(self) -> list[tuple[DataSet, int]]:
+        return self.dsdownloadrecord_repository.get_trending_datasets()
 
     def create_from_form(self, form, current_user) -> DataSet:
         main_author = {

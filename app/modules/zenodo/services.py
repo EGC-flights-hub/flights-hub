@@ -21,6 +21,11 @@ class ZenodoService(BaseService):
 
     def get_zenodo_url(self):
 
+        FAKENODO_URL = os.getenv("FAKENODO_URL")
+        if FAKENODO_URL:
+            logger.info(f"Using FAKENODO_URL: {FAKENODO_URL}")
+            return FAKENODO_URL
+
         FLASK_ENV = os.getenv("FLASK_ENV", "development")
         ZENODO_API_URL = ""
 

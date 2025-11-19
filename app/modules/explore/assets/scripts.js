@@ -106,6 +106,19 @@ function send_query() {
 
                                     </div>
 
+				    <div class="row mb-2">
+
+                                        <div class="col-md-4 col-12">
+                                            <span class=" text-secondary">
+                                                Downloads
+                                            </span>
+                                        </div>
+                                        <div class="col-md-8 col-12">
+                                            <p class="card-text">${dataset.downloads}</p>
+                                        </div>
+
+                                    </div>
+
                                     <div class="row">
 
                                         <div class="col-md-4 col-12">
@@ -117,7 +130,7 @@ function send_query() {
                                             </a>
                                             <a href="/dataset/download/${dataset.id}" class="btn btn-outline-primary btn-sm" id="search" style="border-radius: 5px;">
                                                 Download (${dataset.total_size_in_human_format})
-                                            </a>
+                                            </a> 
                                         </div>
 
 

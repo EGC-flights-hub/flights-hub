@@ -229,7 +229,8 @@ def download_dataset(dataset_id):
             download_date=datetime.now(timezone.utc),
             download_cookie=user_cookie,
         )
-
+    dataset.ds_meta_data.downloads += 1
+    dataset_service.update_dsmetadata(dataset.ds_meta_data_id)
     return resp
 
 
@@ -239,7 +240,7 @@ def subdomain_index(doi):
     # Check if the DOI is an old DOI
     new_doi = doi_mapping_service.get_new_doi(doi)
     if new_doi:
-        # Redirect to the same path with the new DOI
+        # Redirect to the same path with the new DOI      - código HTML y Markdown embebibles
         return redirect(url_for("dataset.subdomain_index", doi=new_doi), code=302)
 
     # Try to search the dataset by the provided DOI (which should already be the new one)
@@ -270,3 +271,38 @@ def get_unsynchronized_dataset(dataset_id):
         abort(404)
 
     return render_template("dataset/view_dataset.html", dataset=dataset)
+
+
+@dataset_bp.route("/dataset/<int:dataset_id>/badge/md", methods=["GET"])
+def dataset_badge_md(dataset_id):
+    """
+    Genera un badge dinámico en .md mediante shields.io
+    """
+    dataset = dataset_service.get_or_404(dataset_id)
+
+    # Pick up the data for the badge
+    name = dataset.name().replace(" ", "_")
+    downloads = dataset.to_dict()["downloads"]
+
+    badge = f"![Static Badge](https://img.shields.io/badge/{name}-{downloads}-green?style=for-the-badge)"
+
+    return badge, 200, {"Content-Type": "text/plain"}
+
+
+@dataset_bp.route("/dataset/<int:dataset_id>/badge/html", methods=["GET"])
+def dataset_badge_html(dataset_id):
+    """
+    Genera un badge dinámico en html mediante shields.io
+    """
+    dataset = dataset_service.get_or_404(dataset_id)
+
+    # Pick up the data for the badge
+    name = dataset.name().replace(" ", "_")
+    downloads = dataset.to_dict()["downloads"]
+
+    link = f"https://img.shields.io/badge/{name}-{downloads}-green?style=for-the-badge"
+    title = '"Static Badge"'
+
+    badge = f"<img alt={title} src = {link}>"
+
+    return badge, 200, {"Content-Type": "text/plain"}

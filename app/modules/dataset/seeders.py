@@ -38,6 +38,7 @@ class DataSetSeeder(BaseSeeder):
                 dataset_doi=f"10.1234/dataset{i+1}",
                 tags="tag1, tag2",
                 ds_metrics_id=seeded_ds_metrics.id,
+                downloads=0,
             )
             for i in range(4)
         ]
