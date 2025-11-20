@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 def index():
     logger.info("Access index")
     dataset_service = DataSetService()
-    feature_model_service = FeatureModelService()
 
     # Statistics: total datasets and feature models
     datasets_counter = dataset_service.count_synchronized_datasets()
