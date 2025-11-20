@@ -345,12 +345,12 @@
     var currentFileId;
 
     function viewFile(fileId) {
-        fetch(`/file/view/${fileId}`)
+        fetch(`/csvfile/view/${fileId}`)
             .then(response => response.json())
             .then(data => {
                 document.getElementById('fileContent').textContent = data.content;
                 currentFileId = fileId;
-                document.getElementById('downloadButton').href = `/file/download/${fileId}`;
+                document.getElementById('downloadButton').href = `/csvfile/download/${fileId}`;
                 var modal = new bootstrap.Modal(document.getElementById('fileViewerModal'));
                 modal.show();
             })
