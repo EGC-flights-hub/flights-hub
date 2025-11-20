@@ -15,15 +15,12 @@ def index():
 
     # Statistics: total datasets
     datasets_counter = dataset_service.count_synchronized_datasets()
-    feature_models_counter = feature_model_service.count_feature_models()
 
     # Statistics: total downloads
     total_dataset_downloads = dataset_service.total_dataset_downloads()
-    total_feature_model_downloads = feature_model_service.total_feature_model_downloads()
 
     # Statistics: total views
     total_dataset_views = dataset_service.total_dataset_views()
-    total_feature_model_views = feature_model_service.total_feature_model_views()
 
     return render_template(
         "public/index.html",
