@@ -95,8 +95,8 @@ var currentId = 0;
                 let authorsButtonId = event.target.id;
                 let authorsId = authorsButtonId.replace("_button", "");
                 let authors = document.getElementById(authorsId);
-                let id = authorsId.replace("_form_authors", "")
-                let newAuthor = createAuthorBlock(amount_authors, `feature_models-${id}-`);
+                let csvId = event.target.getAttribute('data-csv-id');
+                let newAuthor = createAuthorBlock(amount_authors, `csv_files-${csvId}-`);
                 authors.appendChild(newAuthor);
 
             }
