@@ -98,7 +98,7 @@ def create_dataset():
                 deposition_doi = zenodo_service.get_doi(deposition_id)
                 dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
             except Exception as e:
-                msg = f"it has not been possible upload feature models in Zenodo and update the DOI: {e}"
+                msg = f"it has not been possible upload CSV files in Zenodo and update the DOI: {e}"
                 return jsonify({"message": msg}), 200
 
         # Delete temp folder
