@@ -87,9 +87,9 @@ def create_dataset():
             dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
 
             try:
-                # iterate for each feature model (one feature model = one request to Zenodo)
-                for feature_model in dataset.feature_models:
-                    zenodo_service.upload_file(dataset, deposition_id, feature_model)
+                # iterate for each CSV file (one CSV file = one request to Zenodo)
+                for csv_file in dataset.csv_files:
+                    zenodo_service.upload_file(dataset, deposition_id, csv_file)
 
                 # publish deposition
                 zenodo_service.publish_deposition(deposition_id)
