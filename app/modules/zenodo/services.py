@@ -184,14 +184,15 @@ class ZenodoService(BaseService):
             raise Exception(error_message)
         return response.json()
 
-    def upload_file(self, dataset: DataSet, deposition_id: int, feature_model: FeatureModel, user=None) -> dict:
+    def upload_file(self, dataset: DataSet, deposition_id: int, csv_file: CSVFile, user=None) -> dict:
         """
-        Upload a file to a deposition in Zenodo.
+        Upload a CSV file to a deposition in Zenodo.
 
         Args:
+            dataset (DataSet): The DataSet object containing the file.
             deposition_id (int): The ID of the deposition in Zenodo.
-            feature_model (FeatureModel): The FeatureModel object representing the feature model.
-            user (FeatureModel): The User object representing the file owner.
+            csv_file (CSVFile): The CSVFile object representing the CSV file.
+            user: The User object representing the file owner.
 
         Returns:
             dict: The response in JSON format with the details of the uploaded file.
