@@ -52,7 +52,13 @@ def create_dataset():
         dataset = None
 
         if not form.validate_on_submit():
-            return jsonify({"message": form.errors}), 400
+            # Convert form errors to readable message
+            error_messages = []
+            for field, errors in form.errors.items():
+                for error in errors:
+                    error_messages.append(f"{field}: {error}")
+            error_message = "; ".join(error_messages)
+            return jsonify({"message": error_message}), 400
 
         try:
             logger.info("Creating dataset...")
