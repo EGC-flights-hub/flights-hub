@@ -60,14 +60,14 @@
                         <div class="row mb-2">
 
                             <div class="col-12">
-                                <a href="{{ dataset.get_uvlhub_doi() }}">{{ dataset.get_uvlhub_doi() }}</a>
-                                 <div id="dataset_doi_uvlhub_{{ dataset.id }}" style="display: none">
-                                {{ dataset.get_uvlhub_doi() }}
+                                <a href="{{ dataset.get_dataset_doi() }}">{{ dataset.get_dataset_doi() }}</a>
+                                 <div id="dataset_doi_flights_{{ dataset.id }}" style="display: none">
+                                {{ dataset.get_dataset_doi() }}
                             </div>
 
                             <i data-feather="clipboard" class="center-button-icon"
                                style="cursor: pointer"
-                               onclick="copyText('dataset_doi_uvlhub_{{ dataset.id }}')"></i>
+                               onclick="copyText('dataset_doi_flights_{{ dataset.id }}')"></i>
                             </div>
 
 
