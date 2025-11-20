@@ -13,7 +13,7 @@ def index():
     logger.info("Access index")
     dataset_service = DataSetService()
 
-    # Statistics: total datasets and feature models
+    # Statistics: total datasets
     datasets_counter = dataset_service.count_synchronized_datasets()
     feature_models_counter = feature_model_service.count_feature_models()
 
