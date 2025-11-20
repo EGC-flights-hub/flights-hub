@@ -98,6 +98,7 @@ var currentId = 0;
                 let csvId = event.target.getAttribute('data-csv-id');
                 let newAuthor = createAuthorBlock(amount_authors, `csv_files-${csvId}-`);
                 authors.appendChild(newAuthor);
+                amount_authors++;
 
             }
         });
