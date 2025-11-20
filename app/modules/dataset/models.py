@@ -106,7 +106,7 @@ class DataSet(db.Model):
         return self.ds_meta_data.title
 
     def files(self):
-        return [file for fm in self.feature_models for file in fm.files]
+        return self.csv_files
 
     def delete(self):
         db.session.delete(self)
