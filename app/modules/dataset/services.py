@@ -79,7 +79,7 @@ class DataSetService(BaseService):
         return self.dsviewrecord_repostory.total_dataset_views()
 
     def trending_datasets(self) -> list[tuple[str, int]]:
-        return self.dataset_service.get_trending_datasets()
+        return self.repository.get_trending_datasets()
 
     def create_from_form(self, form, current_user) -> DataSet:
         main_author = {
