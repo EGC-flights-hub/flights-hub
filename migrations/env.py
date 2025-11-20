@@ -1,5 +1,6 @@
 import logging
 from logging.config import fileConfig
+from app.modules.dataset.models import db
 
 from flask import current_app
 
