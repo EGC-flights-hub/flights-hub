@@ -354,7 +354,7 @@
 
                                 formContainer.innerHTML = `
                                     <div class="row">
-                                        <input type="hidden" value="${response.filename}" name="feature_models-${formUniqueId}-uvl_filename">
+                                        <input type="hidden" value="${response.filename}" name="csv_files-${formUniqueId}-csv_filename">
                                         <div class="col-12">
                                             <div class="row">
                                                 <div class="col-12">
@@ -398,19 +398,19 @@
                                                 <div class="col-lg-6 col-6">
                                                     <div class="mb-3">
                                                         <label class="form-label" for="publication_doi">Publication DOI</label>
-                                                        <input class="form-control" name="feature_models-${formUniqueId}-publication_doi" type="text" value="">
+                                                        <input class="form-control" name="csv_files-${formUniqueId}-publication_doi" type="text" value="">
                                                     </div>
                                                 </div>
                                                 <div class="col-6">
                                                     <div class="mb-3">
                                                         <label class="form-label">Tags (separated by commas)</label>
-                                                        <input type="text" class="form-control" name="feature_models-${formUniqueId}-tags">
+                                                        <input type="text" class="form-control" name="csv_files-${formUniqueId}-tags">
                                                     </div>
                                                 </div>
                                                 <div class="col-6">
                                                     <div class="mb-3">
-                                                        <label class="form-label">UVL version</label>
-                                                        <input type="text" class="form-control" name="feature_models-${formUniqueId}-uvl_version">
+                                                        <label class="form-label">Dataset version</label>
+                                                        <input type="text" class="form-control" name="csv_files-${formUniqueId}-version">
                                                     </div>
                                                 </div>
                                                 <div class="col-12">
