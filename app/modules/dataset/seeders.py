@@ -64,59 +64,31 @@ class DataSetSeeder(BaseSeeder):
         ]
         seeded_datasets = self.seed(datasets)
 
-        # Assume there are 12 UVL files, create corresponding FMMetaData and FeatureModel
-        fm_meta_data_list = [
-            FMMetaData(
-                uvl_filename=f"file{i+1}.uvl",
-                title=f"Feature Model {i+1}",
-                description=f"Description for feature model {i+1}",
-                publication_type=PublicationType.SOFTWARE_DOCUMENTATION,
-                publication_doi=f"10.1234/fm{i+1}",
-                tags="tag1, tag2",
-                uvl_version="1.0",
-            )
-            for i in range(12)
-        ]
-        seeded_fm_meta_data = self.seed(fm_meta_data_list)
-
-        # Create Author instances and associate with FMMetaData
-        fm_authors = [
-            Author(
-                name=f"Author {i+5}",
-                affiliation=f"Affiliation {i+5}",
-                orcid=f"0000-0000-0000-000{i+5}",
-                fm_meta_data_id=seeded_fm_meta_data[i].id,
-            )
-            for i in range(12)
-        ]
-        self.seed(fm_authors)
-
-        feature_models = [
-            FeatureModel(data_set_id=seeded_datasets[i // 3].id, fm_meta_data_id=seeded_fm_meta_data[i].id)
-            for i in range(12)
-        ]
-        seeded_feature_models = self.seed(feature_models)
-
-        # Create files, associate them with FeatureModels and copy files
+        # Create CSV files and associate them with datasets
         load_dotenv()
         working_dir = os.getenv("WORKING_DIR", "")
-        src_folder = os.path.join(working_dir, "app", "modules", "dataset", "uvl_examples")
+        
+        csv_files_list = []
         for i in range(12):
-            file_name = f"file{i+1}.uvl"
-            feature_model = seeded_feature_models[i]
-            dataset = next(ds for ds in seeded_datasets if ds.id == feature_model.data_set_id)
+            csv_filename = f"sample_data_{i+1}.csv"
+            dataset = seeded_datasets[i // 3]
             user_id = dataset.user_id
 
             dest_folder = os.path.join(working_dir, "uploads", f"user_{user_id}", f"dataset_{dataset.id}")
             os.makedirs(dest_folder, exist_ok=True)
-            shutil.copy(os.path.join(src_folder, file_name), dest_folder)
 
-            file_path = os.path.join(dest_folder, file_name)
+            # Create a simple CSV file for demonstration
+            csv_path = os.path.join(dest_folder, csv_filename)
+            with open(csv_path, 'w') as f:
+                f.write("id,name,value\n")
+                f.write(f"1,Item {i+1},100\n")
 
-            uvl_file = Hubfile(
-                name=file_name,
+            csv_file = CSVFile(
+                name=csv_filename,
                 checksum=f"checksum{i+1}",
-                size=os.path.getsize(file_path),
-                feature_model_id=feature_model.id,
+                size=os.path.getsize(csv_path),
+                dataset_id=dataset.id
             )
-            self.seed([uvl_file])
+            csv_files_list.append(csv_file)
+
+        self.seed(csv_files_list)
