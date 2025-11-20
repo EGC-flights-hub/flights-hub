@@ -1,15 +1,15 @@
+import csv
 import hashlib
 import logging
 import os
 import shutil
 import uuid
-import csv
 from typing import Optional
 
 from flask import request
 
 from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import DataSet, DSMetaData, DSViewRecord, CSVFile
+from app.modules.dataset.models import CSVFile, DataSet, DSMetaData, DSViewRecord
 from app.modules.dataset.repositories import (
     AuthorRepository,
     DataSetRepository,
@@ -102,14 +102,9 @@ class DataSetService(BaseService):
                 file_path = os.path.join(current_user.temp_folder(), csv_filename)
                 checksum, size = calculate_checksum_and_size(file_path)
 
-                csv_file = CSVFile(
-                    name=csv_filename,
-                    checksum=checksum,
-                    size=size,
-                    dataset_id=dataset.id
-                )
+                csv_file = CSVFile(name=csv_filename, checksum=checksum, size=size, dataset_id=dataset.id)
                 dataset.csv_files.append(csv_file)
-            
+
             self.repository.session.commit()
         except Exception as exc:
             logger.info(f"Exception creating dataset from form...: {exc}")
@@ -127,7 +122,7 @@ class DataSetService(BaseService):
     def validate_csv_content(file):
 
         try:
-            file_contents = file.read().decode('utf-8').splitlines()
+            file_contents = file.read().decode("utf-8").splitlines()
 
             if not file_contents:
                 return False, "CSV file is empty or not in UTF-8 format."

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 from app.modules.auth.models import User
-from app.modules.dataset.models import Author, DataSet, DSMetaData, DSMetrics, PublicationType, CSVFile
+from app.modules.dataset.models import Author, CSVFile, DataSet, DSMetaData, DSMetrics, PublicationType
 from core.seeders.BaseSeeder import BaseSeeder
 
 
@@ -67,7 +67,7 @@ class DataSetSeeder(BaseSeeder):
         # Create CSV files and associate them with datasets
         load_dotenv()
         working_dir = os.getenv("WORKING_DIR", "")
-        
+
         csv_files_list = []
         for i in range(12):
             csv_filename = f"sample_data_{i+1}.csv"
@@ -79,15 +79,12 @@ class DataSetSeeder(BaseSeeder):
 
             # Create a simple CSV file for demonstration
             csv_path = os.path.join(dest_folder, csv_filename)
-            with open(csv_path, 'w') as f:
+            with open(csv_path, "w") as f:
                 f.write("id,name,value\n")
                 f.write(f"1,Item {i+1},100\n")
 
             csv_file = CSVFile(
-                name=csv_filename,
-                checksum=f"checksum{i+1}",
-                size=os.path.getsize(csv_path),
-                dataset_id=dataset.id
+                name=csv_filename, checksum=f"checksum{i+1}", size=os.path.getsize(csv_path), dataset_id=dataset.id
             )
             csv_files_list.append(csv_file)
 

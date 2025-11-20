@@ -321,17 +321,12 @@ def dataset_badge_html(dataset_id):
 @dataset_bp.route("/csvfile/download/<int:file_id>", methods=["GET"])
 def download_csv_file(file_id):
     from app.modules.dataset.models import CSVFile
-    
+
     csv_file = CSVFile.query.get_or_404(file_id)
     dataset = csv_file.data_set
-    
-    file_path = os.path.join(
-        "uploads",
-        f"user_{dataset.user_id}",
-        f"dataset_{dataset.id}",
-        csv_file.name
-    )
-    
+
+    file_path = os.path.join("uploads", f"user_{dataset.user_id}", f"dataset_{dataset.id}", csv_file.name)
+
     # Record download
     user_id = current_user.id if current_user.is_authenticated else None
     DSDownloadRecordService().create(
@@ -342,30 +337,21 @@ def download_csv_file(file_id):
     )
     dataset.ds_meta_data.downloads += 1
     dataset_service.update_dsmetadata(dataset.ds_meta_data_id)
-    
-    return send_from_directory(
-        os.path.dirname(file_path),
-        os.path.basename(file_path),
-        as_attachment=True
-    )
+
+    return send_from_directory(os.path.dirname(file_path), os.path.basename(file_path), as_attachment=True)
 
 
 @dataset_bp.route("/csvfile/view/<int:file_id>", methods=["GET"])
 def view_csv_file(file_id):
     from app.modules.dataset.models import CSVFile
-    
+
     csv_file = CSVFile.query.get_or_404(file_id)
     dataset = csv_file.data_set
-    
-    file_path = os.path.join(
-        "uploads",
-        f"user_{dataset.user_id}",
-        f"dataset_{dataset.id}",
-        csv_file.name
-    )
-    
+
+    file_path = os.path.join("uploads", f"user_{dataset.user_id}", f"dataset_{dataset.id}", csv_file.name)
+
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
         return jsonify({"content": content}), 200
     except Exception as e:
@@ -375,28 +361,23 @@ def view_csv_file(file_id):
 @dataset_bp.route("/csvfile/validate/<int:file_id>", methods=["GET"])
 def validate_csv_file(file_id):
     from app.modules.dataset.models import CSVFile
-    
+
     csv_file = CSVFile.query.get_or_404(file_id)
     dataset = csv_file.data_set
-    
-    file_path = os.path.join(
-        "uploads",
-        f"user_{dataset.user_id}",
-        f"dataset_{dataset.id}",
-        csv_file.name
-    )
-    
+
+    file_path = os.path.join("uploads", f"user_{dataset.user_id}", f"dataset_{dataset.id}", csv_file.name)
+
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             file_contents = f.readlines()
-            
+
         if not file_contents:
             return jsonify({"errors": ["CSV file is empty"]}), 400
-        
+
         # Check for valid header
         if len(file_contents) < 2:
             return jsonify({"errors": ["CSV must contain a header and at least one data row"]}), 400
-        
+
         return jsonify({"message": "Valid CSV file"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
