@@ -93,4 +93,4 @@ class DataSetForm(FlaskForm):
         return [author.get_author() for author in self.authors]
 
     def get_csv_files(self):
-        return [file.get_csv_file() for file in self.csv_files]
+        return [file.csv_filename.data for file in self.csv_files]
