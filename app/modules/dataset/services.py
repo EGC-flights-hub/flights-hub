@@ -39,7 +39,7 @@ class DataSetService(BaseService):
         self.dsdownloadrecord_repository = DSDownloadRecordRepository()
         self.dsviewrecord_repostory = DSViewRecordRepository()
 
-    def move_feature_models(self, dataset: DataSet):
+    def move_csv_files(self, dataset: DataSet):
         current_user = AuthenticationService().get_authenticated_user()
         source_dir = current_user.temp_folder()
 
@@ -48,9 +48,8 @@ class DataSetService(BaseService):
 
         os.makedirs(dest_dir, exist_ok=True)
 
-        for feature_model in dataset.feature_models:
-            csv_filename = feature_model.fm_meta_data.csv_filename
-            shutil.move(os.path.join(source_dir, csv_filename), dest_dir)
+        for csv_file in dataset.csv_files:
+            shutil.move(os.path.join(source_dir, csv_file.name), dest_dir)
 
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_synchronized(current_user_id)
