@@ -27,9 +27,6 @@ def index():
         datasets=dataset_service.latest_synchronized(),
         trending_datasets=dataset_service.trending_datasets(),
         datasets_counter=datasets_counter,
-        feature_models_counter=feature_models_counter,
         total_dataset_downloads=total_dataset_downloads,
-        total_feature_model_downloads=total_feature_model_downloads,
         total_dataset_views=total_dataset_views,
-        total_feature_model_views=total_feature_model_views,
     )
