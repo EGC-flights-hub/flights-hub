@@ -96,25 +96,20 @@ class DataSetService(BaseService):
 
             dataset = self.create(commit=False, user_id=current_user.id, ds_meta_data_id=dsmetadata.id)
 
-            for feature_model in form.feature_models:
-                csv_filename = feature_model.csv_filename.data
-                fmmetadata = self.fmmetadata_repository.create(commit=False, **feature_model.get_fmmetadata())
-                for author_data in feature_model.get_authors():
-                    author = self.author_repository.create(commit=False, fm_meta_data_id=fmmetadata.id, **author_data)
-                    fmmetadata.authors.append(author)
-
-                fm = self.feature_model_repository.create(
-                    commit=False, data_set_id=dataset.id, fm_meta_data_id=fmmetadata.id
-                )
-
-                # associated files in feature model
+            # Add CSV files to the dataset
+            for csv_file_field in form.csv_files:
+                csv_filename = csv_file_field.csv_filename.data
                 file_path = os.path.join(current_user.temp_folder(), csv_filename)
                 checksum, size = calculate_checksum_and_size(file_path)
 
-                file = self.hubfilerepository.create(
-                    commit=False, name=csv_filename, checksum=checksum, size=size, feature_model_id=fm.id
+                csv_file = CSVFile(
+                    name=csv_filename,
+                    checksum=checksum,
+                    size=size,
+                    dataset_id=dataset.id
                 )
-                fm.files.append(file)
+                dataset.csv_files.append(csv_file)
+            
             self.repository.session.commit()
         except Exception as exc:
             logger.info(f"Exception creating dataset from form...: {exc}")
