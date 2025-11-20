@@ -40,6 +40,34 @@ class Author(db.Model):
         return {"name": self.name, "affiliation": self.affiliation, "orcid": self.orcid}
 
 
+class CSVFile(db.Model):
+    __tablename__ = "csv_file"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    checksum = db.Column(db.String(120), nullable=False)
+    size = db.Column(db.Integer, nullable=False)
+    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def get_formatted_size(self):
+        from app.modules.dataset.services import SizeService
+
+        return SizeService().get_human_readable_size(self.size)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "checksum": self.checksum,
+            "size_in_bytes": self.size,
+            "size_in_human_format": self.get_formatted_size(),
+            "url": f'{request.host_url.rstrip("/")}/csvfile/download/{self.id}',
+        }
+
+    def __repr__(self):
+        return f"CSVFile<{self.id}>"
+
+
 class DSMetrics(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     number_of_models = db.Column(db.String(120))
