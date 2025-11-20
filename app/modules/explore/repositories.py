@@ -28,8 +28,6 @@ class ExploreRepository(BaseRepository):
         datasets = (
             self.model.query.join(DataSet.ds_meta_data)
             .join(DSMetaData.authors)
-            .join(DataSet.feature_models)
-            .join(FeatureModel.fm_meta_data)
             .filter(or_(*filters))
             .filter(DSMetaData.dataset_doi.isnot(None))  # Exclude datasets with empty dataset_doi
         )
