@@ -34,16 +34,10 @@ def calculate_checksum_and_size(file_path):
 class DataSetService(BaseService):
     def __init__(self):
         super().__init__(DataSetRepository())
-        self.feature_model_repository = FeatureModelRepository()
         self.author_repository = AuthorRepository()
         self.dsmetadata_repository = DSMetaDataRepository()
-        self.fmmetadata_repository = FMMetaDataRepository()
         self.dsdownloadrecord_repository = DSDownloadRecordRepository()
-        self.hubfiledownloadrecord_repository = HubfileDownloadRecordRepository()
-        self.hubfilerepository = HubfileRepository()
         self.dsviewrecord_repostory = DSViewRecordRepository()
-        self.hubfileviewrecord_repository = HubfileViewRecordRepository()
-        self.dataset_service = DSDownloadRecordRepository()
 
     def move_feature_models(self, dataset: DataSet):
         current_user = AuthenticationService().get_authenticated_user()
