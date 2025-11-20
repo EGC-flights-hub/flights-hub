@@ -162,7 +162,7 @@
             <div class="card-body" style="padding-top: 0px">
 
                 <div id="dataset_doi_uvlhub" style="display: none">
-                    {{ dataset.get_uvlhub_doi() }}
+                    {{ dataset.get_dataset_doi() }}
                 </div>
 
                 <button type="button" class="btn doi_button btn-sm" onclick="copyText('dataset_doi_uvlhub')" style="margin-bottom: 15px;">
@@ -171,12 +171,12 @@
                         <b>DOI</b>
                     </span>
                     <span class="doi_text">
-                        {{ dataset.get_uvlhub_doi() }}
+                        {{ dataset.get_dataset_doi() }}
                     </span>
                 </button>
                 
                 <div id="dataset_doi_uvlhub" style="display: none">
-                    {{ dataset.get_uvlhub_doi() }}
+                    {{ dataset.get_dataset_doi() }}
                 </div>
 
                 <button class="btn btn-light btn-sm" onclick="copyBadge('md')">
