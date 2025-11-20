@@ -129,10 +129,10 @@ class DataSet(db.Model):
 
         return SizeService().get_human_readable_size(self.get_file_total_size())
 
-    def get_uvlhub_doi(self):
-        from app.modules.dataset.services import DataSetService
-
-        return DataSetService().get_uvlhub_doi(self)
+    def get_dataset_doi(self):
+        if self.ds_meta_data.dataset_doi:
+            return f"/doi/{self.ds_meta_data.dataset_doi}/"
+        return None
 
     def to_dict(self):
         return {
