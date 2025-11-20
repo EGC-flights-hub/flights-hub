@@ -211,16 +211,27 @@ var currentId = 0;
                                     });
                                 } else {
                                     response.json().then(data => {
-                                        console.error('Error: ' + data.message);
                                         hide_loading();
-
-                                        write_upload_error(data.message);
-
+                                        let errorMessage = data.message;
+                                        
+                                        // Handle case where message is an object instead of string
+                                        if (typeof errorMessage === 'object') {
+                                            errorMessage = JSON.stringify(errorMessage);
+                                        }
+                                        
+                                        console.error('Error: ' + errorMessage);
+                                        write_upload_error(errorMessage);
+                                    }).catch(parseError => {
+                                        hide_loading();
+                                        console.error('Error parsing response:', parseError);
+                                        write_upload_error('An error occurred while uploading the dataset. Please try again.');
                                     });
                                 }
                             })
                             .catch(error => {
+                                hide_loading();
                                 console.error('Error in POST request:', error);
+                                write_upload_error('Network error: ' + error.message);
                             });
                     }
 
