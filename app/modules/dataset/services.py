@@ -9,7 +9,7 @@ from typing import Optional
 from flask import request
 
 from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import DataSet, DSMetaData, DSViewRecord
+from app.modules.dataset.models import DataSet, DSMetaData, DSViewRecord, CSVFile
 from app.modules.dataset.repositories import (
     AuthorRepository,
     DataSetRepository,
