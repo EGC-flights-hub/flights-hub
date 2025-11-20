@@ -365,11 +365,11 @@
         document.getElementById("loading").style.display = "none";
     }
 
-    function checkUVL(file_id) {
+    function checkCSV(file_id) {
     const outputDiv = document.getElementById('check_' + file_id);
     outputDiv.innerHTML = ''; // Clear previous output
 
-    fetch(`/flamapy/check_uvl/${file_id}`)
+    fetch(`/csvfile/validate/${file_id}`)
         .then(response => {
             return response.json().then(data => ({
                 status: response.status,
