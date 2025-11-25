@@ -18,6 +18,12 @@ Developed by **DiversoLab**, this adaptation, *flights-hub*, integrates data man
 * Integration with **Zenodo** for open data publication.
 * Based on the robust **uvlhub** architecture.
 * Open Science-aligned workflows.
+* Dataset download count
+* Dataset version diff checker
+* Badges
+* Login rate limit
+* Trending datasets
+* Recommendations
 
 ---
 
@@ -25,3 +31,11 @@ Developed by **DiversoLab**, this adaptation, *flights-hub*, integrates data man
 
 The base documentation of the project is available at
 [docs.uvlhub.io](https://docs.uvlhub.io/)
+
+You can also check our ./doc folder with our own documentation!
+
+---
+
+## Overview of the development process
+
+We follow a GitFlow-based process where branches are short-lived and commits are atomic. We also embrace a DevSecOps cycle designed to build secure software from the very beginning, integrating security and quality checks seamlessly into our development flow.
