@@ -34,6 +34,49 @@ def calculate_checksum_and_size(file_path):
         content = file.read()
         hash_md5 = hashlib.md5(content).hexdigest()
         return hash_md5, file_size
+    
+def get_related_datasets(self, dataset_id: int) -> list:
+        target_dataset = self.repository.get_by_id(dataset_id)
+        if not target_dataset or not target_dataset.ds_meta_data:
+            return []
+
+        target_tags = set()
+        if target_dataset.ds_meta_data.tags:
+            target_tags = {t.strip().lower() for t in target_dataset.ds_meta_data.tags.split(',')}
+        
+        target_authors = {a.name.strip().lower() for a in target_dataset.ds_meta_data.authors}
+
+        all_datasets = self.repository.get_all()
+        
+        candidates = []
+
+        for ds in all_datasets:
+            if ds.id == target_dataset.id:
+                continue
+            
+            if not ds.ds_meta_data:
+                continue
+
+            score = 0
+            
+            if ds.ds_meta_data.tags:
+                ds_tags = {t.strip().lower() for t in ds.ds_meta_data.tags.split(',')}
+                common_tags = target_tags.intersection(ds_tags)
+                score += len(common_tags) 
+            
+            ds_authors = {a.name.strip().lower() for a in ds.ds_meta_data.authors}
+            common_authors = target_authors.intersection(ds_authors)
+            score += len(common_authors) 
+
+            if score > 0:
+                candidates.append({
+                    'dataset': ds,
+                    'score': score
+                })
+
+        candidates.sort(key=lambda x: x['score'], reverse=True)
+
+        return [item['dataset'] for item in candidates[:4]]
 
 
 class DataSetService(BaseService):
