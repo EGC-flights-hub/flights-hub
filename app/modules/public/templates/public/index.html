@@ -159,12 +159,10 @@
                         <h2> <b>Trending datasets</b> </h2>
 
                         {% for dataset in trending_datasets %}
-                            <div class="h4 mb-3" class="stats-color">
-                                <i data-feather="database" class="align-middle mr-2 stats-color" ></i>
-                                <a href="{{dataset[0].get_uvlhub_doi()}}">&nbsp;{{ dataset[0].name() }} </a>
-                                <i data-feather="download" class="align-middle mr-2 stats-color"></i>
-                                <span>&nbsp;{{ dataset[1] }} downloads</span>
-                            </div>
+                            <h4 class="h4 mb-3" class="stats-color">
+                                <i data-feather="database" class="align-middle mr-2 stats-color"></i>&nbsp;{{ dataset[0] }} -  
+                                <i data-feather="download" class="align-middle mr-2 stats-color"></i>&nbsp;{{ dataset[1] }} downloads
+                            </h4>
                         {% endfor %}
 
                     </div>                    
