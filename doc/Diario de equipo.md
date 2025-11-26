@@ -10,6 +10,8 @@
 
 - La documentación no era accesible para nadie externo al proyecto, lo que dificulta las tareas de corrección y entendimiento del proyecto. Se han pasado a .md los documentos y subido a github para solucionarlo.
 
+- se ha detectado con bastante retraso el mal funcionamiento del workflow Pytest. Se ha corregido inmediatamente siguiendo el procedimiento.
+
 ## Decisiones de diseño
 
 - Se ha implementado Sonarqube solo en la rama main debido a la necesidad de utilizar planes de pago para adaptarlo al workflow propuesto inicialmente.
