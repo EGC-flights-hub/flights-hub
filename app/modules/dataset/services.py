@@ -1,3 +1,4 @@
+import csv
 import hashlib
 import logging
 import os
@@ -8,7 +9,7 @@ from typing import Optional
 from flask import request
 
 from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import DataSet, DSMetaData, DSViewRecord
+from app.modules.dataset.models import CSVFile, DataSet, DSMetaData, DSViewRecord
 from app.modules.dataset.repositories import (
     AuthorRepository,
     DataSetRepository,
@@ -16,12 +17,6 @@ from app.modules.dataset.repositories import (
     DSDownloadRecordRepository,
     DSMetaDataRepository,
     DSViewRecordRepository,
-)
-from app.modules.featuremodel.repositories import FeatureModelRepository, FMMetaDataRepository
-from app.modules.hubfile.repositories import (
-    HubfileDownloadRecordRepository,
-    HubfileRepository,
-    HubfileViewRecordRepository,
 )
 from core.services.BaseService import BaseService
 
@@ -34,65 +29,58 @@ def calculate_checksum_and_size(file_path):
         content = file.read()
         hash_md5 = hashlib.md5(content).hexdigest()
         return hash_md5, file_size
-    
+
+
 def get_related_datasets(self, dataset_id: int) -> list:
-        target_dataset = self.repository.get_by_id(dataset_id)
-        if not target_dataset or not target_dataset.ds_meta_data:
-            return []
+    target_dataset = self.repository.get_by_id(dataset_id)
+    if not target_dataset or not target_dataset.ds_meta_data:
+        return []
 
-        target_tags = set()
-        if target_dataset.ds_meta_data.tags:
-            target_tags = {t.strip().lower() for t in target_dataset.ds_meta_data.tags.split(',')}
-        
-        target_authors = {a.name.strip().lower() for a in target_dataset.ds_meta_data.authors}
+    target_tags = set()
+    if target_dataset.ds_meta_data.tags:
+        target_tags = {t.strip().lower() for t in target_dataset.ds_meta_data.tags.split(",")}
 
-        all_datasets = self.repository.get_all()
-        
-        candidates = []
+    target_authors = {a.name.strip().lower() for a in target_dataset.ds_meta_data.authors}
 
-        for ds in all_datasets:
-            if ds.id == target_dataset.id:
-                continue
-            
-            if not ds.ds_meta_data:
-                continue
+    all_datasets = self.repository.get_all()
 
-            score = 0
-            
-            if ds.ds_meta_data.tags:
-                ds_tags = {t.strip().lower() for t in ds.ds_meta_data.tags.split(',')}
-                common_tags = target_tags.intersection(ds_tags)
-                score += len(common_tags) 
-            
-            ds_authors = {a.name.strip().lower() for a in ds.ds_meta_data.authors}
-            common_authors = target_authors.intersection(ds_authors)
-            score += len(common_authors) 
+    candidates = []
 
-            if score > 0:
-                candidates.append({
-                    'dataset': ds,
-                    'score': score
-                })
+    for ds in all_datasets:
+        if ds.id == target_dataset.id:
+            continue
 
-        candidates.sort(key=lambda x: x['score'], reverse=True)
+        if not ds.ds_meta_data:
+            continue
 
-        return [item['dataset'] for item in candidates[:4]]
+        score = 0
+
+        if ds.ds_meta_data.tags:
+            ds_tags = {t.strip().lower() for t in ds.ds_meta_data.tags.split(",")}
+            common_tags = target_tags.intersection(ds_tags)
+            score += len(common_tags)
+
+        ds_authors = {a.name.strip().lower() for a in ds.ds_meta_data.authors}
+        common_authors = target_authors.intersection(ds_authors)
+        score += len(common_authors)
+
+        if score > 0:
+            candidates.append({"dataset": ds, "score": score})
+
+    candidates.sort(key=lambda x: x["score"], reverse=True)
+
+    return [item["dataset"] for item in candidates[:4]]
 
 
 class DataSetService(BaseService):
     def __init__(self):
         super().__init__(DataSetRepository())
-        self.feature_model_repository = FeatureModelRepository()
         self.author_repository = AuthorRepository()
         self.dsmetadata_repository = DSMetaDataRepository()
-        self.fmmetadata_repository = FMMetaDataRepository()
         self.dsdownloadrecord_repository = DSDownloadRecordRepository()
-        self.hubfiledownloadrecord_repository = HubfileDownloadRecordRepository()
-        self.hubfilerepository = HubfileRepository()
         self.dsviewrecord_repostory = DSViewRecordRepository()
-        self.hubfileviewrecord_repository = HubfileViewRecordRepository()
 
-    def move_feature_models(self, dataset: DataSet):
+    def move_csv_files(self, dataset: DataSet):
         current_user = AuthenticationService().get_authenticated_user()
         source_dir = current_user.temp_folder()
 
@@ -101,9 +89,8 @@ class DataSetService(BaseService):
 
         os.makedirs(dest_dir, exist_ok=True)
 
-        for feature_model in dataset.feature_models:
-            uvl_filename = feature_model.fm_meta_data.uvl_filename
-            shutil.move(os.path.join(source_dir, uvl_filename), dest_dir)
+        for csv_file in dataset.csv_files:
+            shutil.move(os.path.join(source_dir, csv_file.name), dest_dir)
 
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_synchronized(current_user_id)
@@ -119,9 +106,6 @@ class DataSetService(BaseService):
 
     def count_synchronized_datasets(self):
         return self.repository.count_synchronized_datasets()
-
-    def count_feature_models(self):
-        return self.feature_model_service.count_feature_models()
 
     def count_authors(self) -> int:
         return self.author_repository.count()
@@ -153,25 +137,15 @@ class DataSetService(BaseService):
 
             dataset = self.create(commit=False, user_id=current_user.id, ds_meta_data_id=dsmetadata.id)
 
-            for feature_model in form.feature_models:
-                uvl_filename = feature_model.uvl_filename.data
-                fmmetadata = self.fmmetadata_repository.create(commit=False, **feature_model.get_fmmetadata())
-                for author_data in feature_model.get_authors():
-                    author = self.author_repository.create(commit=False, fm_meta_data_id=fmmetadata.id, **author_data)
-                    fmmetadata.authors.append(author)
-
-                fm = self.feature_model_repository.create(
-                    commit=False, data_set_id=dataset.id, fm_meta_data_id=fmmetadata.id
-                )
-
-                # associated files in feature model
-                file_path = os.path.join(current_user.temp_folder(), uvl_filename)
+            # Add CSV files to the dataset
+            for csv_file_field in form.csv_files:
+                csv_filename = csv_file_field.csv_filename.data
+                file_path = os.path.join(current_user.temp_folder(), csv_filename)
                 checksum, size = calculate_checksum_and_size(file_path)
 
-                file = self.hubfilerepository.create(
-                    commit=False, name=uvl_filename, checksum=checksum, size=size, feature_model_id=fm.id
-                )
-                fm.files.append(file)
+                csv_file = CSVFile(name=csv_filename, checksum=checksum, size=size, dataset_id=dataset.id)
+                dataset.csv_files.append(csv_file)
+
             self.repository.session.commit()
         except Exception as exc:
             logger.info(f"Exception creating dataset from form...: {exc}")
@@ -182,9 +156,41 @@ class DataSetService(BaseService):
     def update_dsmetadata(self, id, **kwargs):
         return self.dsmetadata_repository.update(id, **kwargs)
 
-    def get_uvlhub_doi(self, dataset: DataSet) -> str:
+    def get_dataset_doi_url(self, dataset: DataSet) -> str:
         domain = os.getenv("DOMAIN", "localhost")
         return f"http://{domain}/doi/{dataset.ds_meta_data.dataset_doi}"
+
+    def validate_csv_content(file):
+
+        try:
+            file_contents = file.read().decode("utf-8").splitlines()
+
+            if not file_contents:
+                return False, "CSV file is empty or not in UTF-8 format."
+
+            # Use the csv module to check structure
+            reader = csv.reader(file_contents)
+            header = next(reader)
+
+            if not header or not any(header):
+                return False, "CSV header row cannot be empty."
+
+            # Check for at least one data row
+            try:
+                next(reader)
+            except StopIteration:
+                return False, "CSV must contain a header and at least one data row."
+
+            file.seek(0)
+
+            return True, None
+
+        except UnicodeDecodeError:
+            file.seek(0)
+            return False, "Error: CSV file must be UTF-8 encoded."
+        except Exception as e:
+            file.seek(0)
+            return False, f"Error validating CSV content: {type(e).__name__}."
 
 
 class AuthorService(BaseService):

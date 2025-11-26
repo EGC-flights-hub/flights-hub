@@ -52,13 +52,19 @@ def create_dataset():
         dataset = None
 
         if not form.validate_on_submit():
-            return jsonify({"message": form.errors}), 400
+            # Convert form errors to readable message
+            error_messages = []
+            for field, errors in form.errors.items():
+                for error in errors:
+                    error_messages.append(f"{field}: {error}")
+            error_message = "; ".join(error_messages)
+            return jsonify({"message": error_message}), 400
 
         try:
             logger.info("Creating dataset...")
             dataset = dataset_service.create_from_form(form=form, current_user=current_user)
             logger.info(f"Created dataset: {dataset}")
-            dataset_service.move_feature_models(dataset)
+            dataset_service.move_csv_files(dataset)
         except Exception as exc:
             logger.exception(f"Exception while create dataset data in local {exc}")
             return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
@@ -81,9 +87,9 @@ def create_dataset():
             dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
 
             try:
-                # iterate for each feature model (one feature model = one request to Zenodo)
-                for feature_model in dataset.feature_models:
-                    zenodo_service.upload_file(dataset, deposition_id, feature_model)
+                # iterate for each CSV file (one CSV file = one request to Zenodo)
+                for csv_file in dataset.csv_files:
+                    zenodo_service.upload_file(dataset, deposition_id, csv_file)
 
                 # publish deposition
                 zenodo_service.publish_deposition(deposition_id)
@@ -92,7 +98,7 @@ def create_dataset():
                 deposition_doi = zenodo_service.get_doi(deposition_id)
                 dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
             except Exception as e:
-                msg = f"it has not been possible upload feature models in Zenodo and update the DOI: {e}"
+                msg = f"it has not been possible upload CSV files in Zenodo and update the DOI: {e}"
                 return jsonify({"message": msg}), 200
 
         # Delete temp folder
@@ -122,8 +128,12 @@ def upload():
     file = request.files["file"]
     temp_folder = current_user.temp_folder()
 
-    if not file or not file.filename.endswith(".uvl"):
+    if not file or not file.filename.endswith(".csv"):
         return jsonify({"message": "No valid file"}), 400
+
+    is_valid, error_message = DataSetService.validate_csv_content(file)
+    if not is_valid:
+        return jsonify({"message": error_message}), 400
 
     # create temp folder
     if not os.path.exists(temp_folder):
@@ -150,7 +160,7 @@ def upload():
     return (
         jsonify(
             {
-                "message": "UVL uploaded and validated successfully",
+                "message": "CSV uploaded and validated successfully",
                 "filename": new_filename,
             }
         ),
@@ -306,3 +316,68 @@ def dataset_badge_html(dataset_id):
     badge = f"<img alt={title} src = {link}>"
 
     return badge, 200, {"Content-Type": "text/plain"}
+
+
+@dataset_bp.route("/csvfile/download/<int:file_id>", methods=["GET"])
+def download_csv_file(file_id):
+    from app.modules.dataset.models import CSVFile
+
+    csv_file = CSVFile.query.get_or_404(file_id)
+    dataset = csv_file.data_set
+
+    file_path = os.path.join("uploads", f"user_{dataset.user_id}", f"dataset_{dataset.id}", csv_file.name)
+
+    # Record download
+    user_id = current_user.id if current_user.is_authenticated else None
+    DSDownloadRecordService().create(
+        user_id=user_id,
+        dataset_id=dataset.id,
+        download_date=datetime.now(timezone.utc),
+        download_cookie=request.cookies.get("download_cookie", str(uuid.uuid4())),
+    )
+    dataset.ds_meta_data.downloads += 1
+    dataset_service.update_dsmetadata(dataset.ds_meta_data_id)
+
+    return send_from_directory(os.path.dirname(file_path), os.path.basename(file_path), as_attachment=True)
+
+
+@dataset_bp.route("/csvfile/view/<int:file_id>", methods=["GET"])
+def view_csv_file(file_id):
+    from app.modules.dataset.models import CSVFile
+
+    csv_file = CSVFile.query.get_or_404(file_id)
+    dataset = csv_file.data_set
+
+    file_path = os.path.join("uploads", f"user_{dataset.user_id}", f"dataset_{dataset.id}", csv_file.name)
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        return jsonify({"content": content}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@dataset_bp.route("/csvfile/validate/<int:file_id>", methods=["GET"])
+def validate_csv_file(file_id):
+    from app.modules.dataset.models import CSVFile
+
+    csv_file = CSVFile.query.get_or_404(file_id)
+    dataset = csv_file.data_set
+
+    file_path = os.path.join("uploads", f"user_{dataset.user_id}", f"dataset_{dataset.id}", csv_file.name)
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            file_contents = f.readlines()
+
+        if not file_contents:
+            return jsonify({"errors": ["CSV file is empty"]}), 400
+
+        # Check for valid header
+        if len(file_contents) < 2:
+            return jsonify({"errors": ["CSV must contain a header and at least one data row"]}), 400
+
+        return jsonify({"message": "Valid CSV file"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

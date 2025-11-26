@@ -19,7 +19,7 @@
                         <div class="d-flex align-items-center justify-content-between">
                             <h2>
 
-                                <a href="{{ dataset.get_uvlhub_doi() }}">
+                                <a href="{{ dataset.get_dataset_doi() }}">
                                     {{ dataset.ds_meta_data.title }}
                                 </a>
 
@@ -60,14 +60,14 @@
                         <div class="row mb-2">
 
                             <div class="col-12">
-                                <a href="{{ dataset.get_uvlhub_doi() }}">{{ dataset.get_uvlhub_doi() }}</a>
-                                 <div id="dataset_doi_uvlhub_{{ dataset.id }}" style="display: none">
-                                {{ dataset.get_uvlhub_doi() }}
+                                <a href="{{ dataset.get_dataset_doi() }}">{{ dataset.get_dataset_doi() }}</a>
+                                 <div id="dataset_doi_flights_{{ dataset.id }}" style="display: none">
+                                {{ dataset.get_dataset_doi() }}
                             </div>
 
                             <i data-feather="clipboard" class="center-button-icon"
                                style="cursor: pointer"
-                               onclick="copyText('dataset_doi_uvlhub_{{ dataset.id }}')"></i>
+                               onclick="copyText('dataset_doi_flights_{{ dataset.id }}')"></i>
                             </div>
 
 
@@ -86,7 +86,7 @@
 
                         <div class="row  mt-4">
                             <div class="col-12">
-                                <a href="{{ dataset.get_uvlhub_doi() }}" class="btn btn-outline-primary btn-sm"
+                                <a href="{{ dataset.get_dataset_doi() }}" class="btn btn-outline-primary btn-sm"
                                    style="border-radius: 5px;">
                                     <i data-feather="eye" class="center-button-icon"></i>
                                     View dataset
@@ -136,23 +136,11 @@
                             </h4>
                     
                             <h4 class="h4 mb-3" class="stats-color">
-                                <i data-feather="file" class="align-middle mr-2 stats-color"></i>&nbsp;{{ feature_models_counter }} feature models
-                            </h4>
-                    
-                            <h4 class="h4 mb-3" class="stats-color">
                                 <i data-feather="eye" class="align-middle mr-2 stats-color"></i>&nbsp;{{ total_dataset_views }} datasets viewed
                             </h4>
                     
                             <h4 class="h4 mb-3" class="stats-color">
-                                <i data-feather="eye" class="align-middle mr-2 stats-color"></i>&nbsp;{{ total_feature_model_views }} feature models viewed
-                            </h4>
-                    
-                            <h4 class="h4 mb-3" class="stats-color">
                                 <i data-feather="download" class="align-middle mr-2 stats-color"></i>&nbsp;{{ total_dataset_downloads }} datasets downloaded
-                            </h4>
-                    
-                            <h4 class="h4" class="stats-color">
-                                <i data-feather="download" class="align-middle mr-2 stats-color"></i>&nbsp;{{ total_feature_model_downloads }} feature models downloaded
                             </h4>
                     
                         </h1>
@@ -184,44 +172,6 @@
                 </div>
             </div>
 
-                <div class="col-12">
-
-                    <div class="card">
-
-                        <div class="card-body">
-                    
-
-                    
-                            <h2> <b>Related publication</b> </h2>
-                            
-                            David Romero-Organvidez, José A. Galindo, Chico Sundermann, Jose-Miguel Horcas, David Benavides. 
-                            <i>UVLHub: A feature model data repository using UVL and open science principles</i>,
-                            Journal of Systems and Software,
-                            2024,
-                            112150,
-                            ISSN 0164-1212,
-                            <a href="https://doi.org/10.1016/j.jss.2024.112150" target="_blank">https://doi.org/10.1016/j.jss.2024.112150</a>
-                    
-                        </div>
-                    
-                        <div class="card-body mt-0 pt-0">
-                    
-                            <button onclick="copyText('bibtex_cite')" class="btn btn-light" style="border-radius: 5px; margin-right: 10px">
-                                <i data-feather="clipboard" class="center-button-icon"></i>
-                                Copy in BibTex
-                            </button>
-                    
-                            <button onclick="copyText('ris_cite')" class="btn btn-light" style="border-radius: 5px;">
-                                <i data-feather="clipboard" class="center-button-icon"></i>
-                                Copy in RIS
-                            </button>
-                    
-                        </div>
-                    
-                    </div>
-                    
-
-                </div>
 
                 {% if current_user.is_anonymous %}
 
@@ -234,7 +184,7 @@
 
                             <div class="card-body card-body-slim">
 
-                                What are you waiting for to upload your fantastic feature models in UVL format?
+                                What are you waiting for to upload your fantastic CSV flight-related datasets?
 
                                 <div class="row mt-2">
 

@@ -35,10 +35,37 @@ class Author(db.Model):
     affiliation = db.Column(db.String(120))
     orcid = db.Column(db.String(120))
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey("ds_meta_data.id"))
-    fm_meta_data_id = db.Column(db.Integer, db.ForeignKey("fm_meta_data.id"))
 
     def to_dict(self):
         return {"name": self.name, "affiliation": self.affiliation, "orcid": self.orcid}
+
+
+class CSVFile(db.Model):
+    __tablename__ = "csv_file"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    checksum = db.Column(db.String(120), nullable=False)
+    size = db.Column(db.Integer, nullable=False)
+    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def get_formatted_size(self):
+        from app.modules.dataset.services import SizeService
+
+        return SizeService().get_human_readable_size(self.size)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "checksum": self.checksum,
+            "size_in_bytes": self.size,
+            "size_in_human_format": self.get_formatted_size(),
+            "url": f'{request.host_url.rstrip("/")}/csvfile/download/{self.id}',
+        }
+
+    def __repr__(self):
+        return f"CSVFile<{self.id}>"
 
 
 class DSMetrics(db.Model):
@@ -73,13 +100,13 @@ class DataSet(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
-    feature_models = db.relationship("FeatureModel", backref="data_set", lazy=True, cascade="all, delete")
+    csv_files = db.relationship("CSVFile", backref="data_set", lazy=True, cascade="all, delete")
 
     def name(self):
         return self.ds_meta_data.title
 
     def files(self):
-        return [file for fm in self.feature_models for file in fm.files]
+        return self.csv_files
 
     def delete(self):
         db.session.delete(self)
@@ -92,20 +119,20 @@ class DataSet(db.Model):
         return f"https://zenodo.org/record/{self.ds_meta_data.deposition_id}" if self.ds_meta_data.dataset_doi else None
 
     def get_files_count(self):
-        return sum(len(fm.files) for fm in self.feature_models)
+        return len(self.csv_files)
 
     def get_file_total_size(self):
-        return sum(file.size for fm in self.feature_models for file in fm.files)
+        return sum(file.size for file in self.csv_files)
 
     def get_file_total_size_for_human(self):
         from app.modules.dataset.services import SizeService
 
         return SizeService().get_human_readable_size(self.get_file_total_size())
 
-    def get_uvlhub_doi(self):
-        from app.modules.dataset.services import DataSetService
-
-        return DataSetService().get_uvlhub_doi(self)
+    def get_dataset_doi(self):
+        if self.ds_meta_data.dataset_doi:
+            return f"/doi/{self.ds_meta_data.dataset_doi}/"
+        return None
 
     def to_dict(self):
         return {
@@ -119,10 +146,10 @@ class DataSet(db.Model):
             "publication_doi": self.ds_meta_data.publication_doi,
             "dataset_doi": self.ds_meta_data.dataset_doi,
             "tags": self.ds_meta_data.tags.split(",") if self.ds_meta_data.tags else [],
-            "url": self.get_uvlhub_doi(),
+            "url": self.get_dataset_doi(),
             "download": f'{request.host_url.rstrip("/")}/dataset/download/{self.id}',
             "zenodo": self.get_zenodo_url(),
-            "files": [file.to_dict() for fm in self.feature_models for file in fm.files],
+            "files": [file.to_dict() for file in self.csv_files],
             "files_count": self.get_files_count(),
             "total_size_in_bytes": self.get_file_total_size(),
             "total_size_in_human_format": self.get_file_total_size_for_human(),

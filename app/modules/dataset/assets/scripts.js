@@ -90,14 +90,15 @@ var currentId = 0;
 
 
         document.addEventListener('click', function (event) {
-            if (event.target && event.target.classList.contains('add_author_to_uvl')) {
+            if (event.target && event.target.classList.contains('add_author_to_csv')) {
 
                 let authorsButtonId = event.target.id;
                 let authorsId = authorsButtonId.replace("_button", "");
                 let authors = document.getElementById(authorsId);
-                let id = authorsId.replace("_form_authors", "")
-                let newAuthor = createAuthorBlock(amount_authors, `feature_models-${id}-`);
+                let csvId = event.target.getAttribute('data-csv-id');
+                let newAuthor = createAuthorBlock(amount_authors, `csv_files-${csvId}-`);
                 authors.appendChild(newAuthor);
+                amount_authors++;
 
             }
         });
@@ -210,16 +211,27 @@ var currentId = 0;
                                     });
                                 } else {
                                     response.json().then(data => {
-                                        console.error('Error: ' + data.message);
                                         hide_loading();
-
-                                        write_upload_error(data.message);
-
+                                        let errorMessage = data.message;
+                                        
+                                        // Handle case where message is an object instead of string
+                                        if (typeof errorMessage === 'object') {
+                                            errorMessage = JSON.stringify(errorMessage);
+                                        }
+                                        
+                                        console.error('Error: ' + errorMessage);
+                                        write_upload_error(errorMessage);
+                                    }).catch(parseError => {
+                                        hide_loading();
+                                        console.error('Error parsing response:', parseError);
+                                        write_upload_error('An error occurred while uploading the dataset. Please try again.');
                                     });
                                 }
                             })
                             .catch(error => {
+                                hide_loading();
                                 console.error('Error in POST request:', error);
+                                write_upload_error('Network error: ' + error.message);
                             });
                     }
 
