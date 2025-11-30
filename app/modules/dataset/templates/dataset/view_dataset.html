@@ -9,10 +9,10 @@
         width: 100%;
         margin-bottom: 5px;
 
-    .option-button:last-child {
-        margin-bottom: 0;
+        .option-button:last-child {
+            margin-bottom: 0;
+        }
     }
-}
 </style>
 {% endblock %}
 
@@ -110,32 +110,33 @@
 
                 {% if dataset.ds_meta_data.dataset_doi %}
                 <div class="row mb-2">
-                    
-                        <div class="col-md-4 col-12">
-                            <span class=" text-secondary">
-                                Zenodo record
-                            </span>
-                        </div>
 
-                        {% if FLASK_ENV == 'production' %}
-                            <div class="col-md-8 col-12">
-                                <a href="https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank">
-                                    https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
-                                </a>
-                            </div>
-                        {% elif FLASK_ENV == 'development' %}
-                            <div class="col-md-8 col-12">
-                                <a href="https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank">
-                                    https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
-                                </a>
-                            </div>
-                        {% else %}
-                            <div class="col-md-8 col-12">
-                                <a href="https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank">
-                                    https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
-                                </a>
-                            </div>
-                        {% endif %}
+                    <div class="col-md-4 col-12">
+                        <span class=" text-secondary">
+                            Zenodo record
+                        </span>
+                    </div>
+
+                    {% if FLASK_ENV == 'production' %}
+                    <div class="col-md-8 col-12">
+                        <a href="https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank">
+                            https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
+                        </a>
+                    </div>
+                    {% elif FLASK_ENV == 'development' %}
+                    <div class="col-md-8 col-12">
+                        <a href="https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}"
+                            target="_blank">
+                            https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="col-md-8 col-12">
+                        <a href="https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank">
+                            https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
+                        </a>
+                    </div>
+                    {% endif %}
 
                 </div>
                 {% endif %}
@@ -154,7 +155,7 @@
 
                 </div>
 
-                
+
 
             </div>
 
@@ -165,7 +166,8 @@
                     {{ dataset.get_dataset_doi() }}
                 </div>
 
-                <button type="button" class="btn doi_button btn-sm" onclick="copyText('dataset_doi_uvlhub')" style="margin-bottom: 15px;">
+                <button type="button" class="btn doi_button btn-sm" onclick="copyText('dataset_doi_uvlhub')"
+                    style="margin-bottom: 15px;">
                     <span class="button_doi_id">
                         <i data-feather="clipboard" class="center-button-icon" style="cursor: pointer"></i>
                         <b>DOI</b>
@@ -174,42 +176,79 @@
                         {{ dataset.get_dataset_doi() }}
                     </span>
                 </button>
-                
+
                 <div id="dataset_doi_uvlhub" style="display: none">
                     {{ dataset.get_dataset_doi() }}
                 </div>
 
                 <button class="btn btn-light btn-sm" onclick="copyBadge('md')">
                     <i data-feather="clipboard"></i> Copy Markdown Badge
-                </button> 
+                </button>
                 <button class="btn btn-light btn-sm" onclick="copyBadge('html')">
                     <i data-feather="clipboard"></i> Copy HTML Badge
-                </button> 
+                </button>
 
             </div>
             {% endif %}
 
         </div>
 
+        {% if related_datasets %}
+        <div class="card mb-4"> <div class="card-body">
+                <h3>Related datasets</h3>
+                
+                <div class="list-group list-group-flush">
+                    {% for related in related_datasets %}
+                    <a href="{{ url_for('dataset.subdomain_index', doi=related.ds_meta_data.dataset_doi) }}" 
+                       class="list-group-item list-group-item-action" 
+                       style="border: none; padding-left: 0;">
+                        
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1" style="color: #007bff;">{{ related.ds_meta_data.title }}</h5>
+                            <small class="text-muted">
+                                {{ related.ds_meta_data.authors[0].name if related.ds_meta_data.authors else 'Unknown' }}
+                            </small>
+                        </div>
+                        
+                        <p class="mb-1">
+                            {{ related.ds_meta_data.description[:100] }}...
+                        </p>
+                        
+                        <div>
+                            {% if related.ds_meta_data.tags %}
+                                {% for tag in related.ds_meta_data.tags.split(',') %}
+                                    <span class="badge bg-secondary">{{ tag.strip() }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </a>
+                    <hr style="margin: 5px 0;"> {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="card">
 
             <div class="card-body">
 
                 <h3> Related publication </h3>
-                
+
                 David Romero-Organvidez, José A. Galindo, Chico Sundermann, Jose-Miguel Horcas, David Benavides,
                 <i>UVLHub: A feature model data repository using UVL and open science principles</i>,
                 Journal of Systems and Software,
                 2024,
                 112150,
                 ISSN 0164-1212,
-                <a href="https://doi.org/10.1016/j.jss.2024.112150" target="_blank">https://doi.org/10.1016/j.jss.2024.112150</a>
+                <a href="https://doi.org/10.1016/j.jss.2024.112150"
+                    target="_blank">https://doi.org/10.1016/j.jss.2024.112150</a>
 
             </div>
 
             <div class="card-body mt-0 pt-0">
 
-                <button onclick="copyText('bibtex_cite')" class="btn btn-light btn-sm" style="border-radius: 5px; margin-right: 10px">
+                <button onclick="copyText('bibtex_cite')" class="btn btn-light btn-sm"
+                    style="border-radius: 5px; margin-right: 10px">
                     <i data-feather="clipboard" class="center-button-icon"></i>
                     Copy in BibTex
                 </button>
@@ -245,66 +284,69 @@
                 <div class="row">
                     <div class="col-12 d-flex justify-content-between align-items-center">
                         <h4 style="margin-bottom: 0px">Data Files</h4>
-                        <h4 style="margin-bottom: 0px;"><span class="badge bg-dark">{{ dataset.get_files_count() }}</span></h4>
+                        <h4 style="margin-bottom: 0px;"><span class="badge bg-dark">{{ dataset.get_files_count()
+                                }}</span></h4>
                     </div>
                 </div>
-                
+
 
             </div>
-            
+
 
             {% for file in dataset.csv_files %}
-                <div class="list-group-item">
-                    
-                    <div class="row">
-                        <div class="col-12">
+            <div class="list-group-item">
 
-                            <div class="row">
-                                <div class="col-8">
-                                    <i data-feather="file"></i> {{ file.name }}
-                                    <br>
-                                    <small class="text-muted">({{ file.get_formatted_size() }})</small>
-                                </div>
-                                <div class="col-2">
-                                    <div id="check_{{ file.id }}">
-                                    </div>
-                                </div>
+                <div class="row">
+                    <div class="col-12">
+
+                        <div class="row">
+                            <div class="col-8">
+                                <i data-feather="file"></i> {{ file.name }}
+                                <br>
+                                <small class="text-muted">({{ file.get_formatted_size() }})</small>
                             </div>
-
-                            
-                        </div>
-                        <div class="col-12 text-end" >
-
-                            <button onclick="viewFile('{{ file.id }}')" class="btn btn-outline-secondary btn-sm" style="border-radius: 5px;">
-                                <i data-feather="eye"></i> View
-                            </button>
-
-                            <div class="btn-group" role="group">
-                                <a href="/dataset/download/{{ file.id }}" class="btn btn-primary btn-sm" style="border-radius: 5px;">
-                                    <i data-feather="download"></i> Download
-                                </a>
-                            </div>
-                                
-                                
-
+                            <div class="col-2">
+                                <div id="check_{{ file.id }}">
+                                </div>
                             </div>
                         </div>
+
+
                     </div>
+                    <div class="col-12 text-end">
+
+                        <button onclick="viewFile('{{ file.id }}')" class="btn btn-outline-secondary btn-sm"
+                            style="border-radius: 5px;">
+                            <i data-feather="eye"></i> View
+                        </button>
+
+                        <div class="btn-group" role="group">
+                            <a href="/dataset/download/{{ file.id }}" class="btn btn-primary btn-sm"
+                                style="border-radius: 5px;">
+                                <i data-feather="download"></i> Download
+                            </a>
+                        </div>
+
+
+
+                    </div>
+                </div>
+            </div>
             {% endfor %}
         </div>
-        
-        
-    
+
+
+
         <a href="/dataset/download/{{ dataset.id }}" class="btn btn-primary mt-3" style="border-radius: 5px;">
             <i data-feather="download" class="center-button-icon"></i>
             Download all ({{ dataset.get_file_total_size_for_human() }})
         </a>
-	<div class="badge bg-secondary" style="border-radius: 5px;">
-	    <td>Downloads</td>
-	    <td>{{ dataset.ds_meta_data.downloads }}</td>
-	</div>
+        <div class="badge bg-secondary" style="border-radius: 5px;">
+            <td>Downloads</td>
+            <td>{{ dataset.ds_meta_data.downloads }}</td>
+        </div>
     </div>
-    
+
 </div>
 
 <!-- Modal-->
@@ -326,7 +368,8 @@
                 </div>
             </div>
             <div class="modal-body" style="overflow-y: auto; height: calc(100vh - 50px);">
-                <pre id="fileContent" style="height: 100%; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; background-color: #f5f5f5; padding: 20px; border-radius: 5px; border: 1px solid #ccc;"></pre>
+                <pre id="fileContent"
+                    style="height: 100%; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; background-color: #f5f5f5; padding: 20px; border-radius: 5px; border: 1px solid #ccc;"></pre>
 
             </div>
         </div>
@@ -366,44 +409,44 @@
     }
 
     function checkCSV(file_id) {
-    const outputDiv = document.getElementById('check_' + file_id);
-    outputDiv.innerHTML = ''; // Clear previous output
+        const outputDiv = document.getElementById('check_' + file_id);
+        outputDiv.innerHTML = ''; // Clear previous output
 
-    fetch(`/csvfile/validate/${file_id}`)
-        .then(response => {
-            return response.json().then(data => ({
-                status: response.status,
-                data
-            }));
-        })
-        .then(({ status, data }) => {
-            if (status === 400) {
-                // Display errors
-                if (data.errors) {
-                    outputDiv.innerHTML = '<span class="badge badge-danger">Errors:</span>';
-                    data.errors.forEach(error => {
-                        const errorElement = document.createElement('span');
-                        errorElement.className = 'badge badge-danger';
-                        errorElement.textContent = error;
-                        outputDiv.appendChild(errorElement);
-                        outputDiv.appendChild(document.createElement('br')); // Line break for better readability
-                    });
+        fetch(`/csvfile/validate/${file_id}`)
+            .then(response => {
+                return response.json().then(data => ({
+                    status: response.status,
+                    data
+                }));
+            })
+            .then(({ status, data }) => {
+                if (status === 400) {
+                    // Display errors
+                    if (data.errors) {
+                        outputDiv.innerHTML = '<span class="badge badge-danger">Errors:</span>';
+                        data.errors.forEach(error => {
+                            const errorElement = document.createElement('span');
+                            errorElement.className = 'badge badge-danger';
+                            errorElement.textContent = error;
+                            outputDiv.appendChild(errorElement);
+                            outputDiv.appendChild(document.createElement('br')); // Line break for better readability
+                        });
+                    } else {
+                        outputDiv.innerHTML = `<span class="badge badge-danger">Error: ${data.error}</span>`;
+                    }
+                } else if (status === 200) {
+                    // Display success message
+                    outputDiv.innerHTML = '<span class="badge badge-success">Valid Model</span>';
                 } else {
-                    outputDiv.innerHTML = `<span class="badge badge-danger">Error: ${data.error}</span>`;
+                    // Handle unexpected status
+                    outputDiv.innerHTML = `<span class="badge badge-warning">Unexpected response status: ${status}</span>`;
                 }
-            } else if (status === 200) {
-                // Display success message
-                outputDiv.innerHTML = '<span class="badge badge-success">Valid Model</span>';
-            } else {
-                // Handle unexpected status
-                outputDiv.innerHTML = `<span class="badge badge-warning">Unexpected response status: ${status}</span>`;
-            }
-        })
-        .catch(error => {
-            // Handle fetch errors
-            outputDiv.innerHTML = `<span class="badge badge-danger">An unexpected error occurred: ${error.message}</span>`;
-        });
-}
+            })
+            .catch(error => {
+                // Handle fetch errors
+                outputDiv.innerHTML = `<span class="badge badge-danger">An unexpected error occurred: ${error.message}</span>`;
+            });
+    }
 
 
 
@@ -418,21 +461,21 @@
 </script>
 
 <script>
-function copyBadge(type) {
-    const datasetId = {{ dataset.id }};
-    const url = `/dataset/${datasetId}/badge/${type}`;
+    function copyBadge(type) {
+        const datasetId = {{ dataset.id }};
+        const url = `/dataset/${datasetId}/badge/${type}`;
 
-    fetch(url)
-        .then(response => {
-            if (!response.ok) throw new Error("Network response was not ok");
-            return response.text();
-        })
-        .then(badgeText => {
-            navigator.clipboard.writeText(badgeText)
-                .catch(() => {}); 
-        })
-        .catch(() => {}); 
-}
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error("Network response was not ok");
+                return response.text();
+            })
+            .then(badgeText => {
+                navigator.clipboard.writeText(badgeText)
+                    .catch(() => { console.error("Error al copiar al portapapeles"); });
+            })
+            .catch((error) => { console.error("Error en la petición del badge:", error); }); 
+    }
 </script>
 
 

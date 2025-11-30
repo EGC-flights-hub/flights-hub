@@ -74,6 +74,9 @@ class DSViewRecordRepository(BaseRepository):
 class DataSetRepository(BaseRepository):
     def __init__(self):
         super().__init__(DataSet)
+    
+    def get_all(self):
+        return self.model.query.all()
 
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return (
