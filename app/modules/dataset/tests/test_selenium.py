@@ -71,3 +71,17 @@ class TestUploadanddownloadds:
         self.driver.find_element(By.CSS_SELECTOR, ".feather-download").click()
         # 28 | click | linkText=test |  |
         self.driver.find_element(By.LINK_TEXT, "test").click()
+
+    def test_badge(self):
+        self.driver.get("http://localhost:5000/")
+        self.driver.set_window_size(886, 969)
+        self.driver.find_element(By.LINK_TEXT, "Login").click()
+        self.driver.find_element(By.ID, "email").click()
+        self.driver.find_element(By.ID, "email").send_keys("user1@example.com")
+        self.driver.find_element(By.ID, "password").send_keys("1234")
+        self.driver.find_element(By.ID, "submit").click()
+        self.driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
+        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn:nth-child(4)").click()
+        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(5)").click()
+        self.driver.find_element(By.LINK_TEXT, "Doe, John").click()
+        self.driver.find_element(By.LINK_TEXT, "Log out").click()

@@ -30,6 +30,7 @@ def calculate_checksum_and_size(file_path):
         hash_md5 = hashlib.md5(content).hexdigest()
         return hash_md5, file_size
 
+
 class DataSetService(BaseService):
     def __init__(self):
         super().__init__(DataSetRepository())
@@ -149,7 +150,6 @@ class DataSetService(BaseService):
         except Exception as e:
             file.seek(0)
             return False, f"Error validating CSV content: {type(e).__name__}."
-    
 
     def get_related_datasets(self, dataset_id: int) -> list:
         target_dataset = self.repository.get_by_id(dataset_id)
