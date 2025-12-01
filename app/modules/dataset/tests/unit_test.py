@@ -47,33 +47,6 @@ def test_trending_datasets_view(test_client):
     assert b"<h2> <b>Trending datasets</b> </h2>" in response.data
 
 
-# def test_trending_datasets(test_client):
-#     from app import db
-#     with test_client.application.app_context():
-#         ds_download_record1 = DSDownloadRecord(dataset_id =1, download_date = datetime.utcnow(), download_cookie = str(uuid.uuid4()))
-#         db.session.add(ds_download_record1)
-#         db.session.commit()
-#         ds_download_record2 = DSDownloadRecord(dataset_id =1, download_date = datetime.utcnow(), download_cookie = str(uuid.uuid4()))
-#         db.session.add(ds_download_record2)
-#         db.session.commit()
-#         ds2 = DataSet(user_id=1, ds_meta_data_id=1)
-#         db.session.add(ds2)
-#         db.session.commit()
-#         ds_download_record3 = DSDownloadRecord(dataset_id =2, download_date = datetime.utcnow(), download_cookie = str(uuid.uuid4()))
-#         db.session.add(ds_download_record3)
-#         db.session.commit()
-#     response = test_client.get("/")
-#     assert response.status_code == 200
-#     assert b"<h2> <b>Trending datasets</b> </h2>" in response.data
-#     assert b"Sample dataset 1" in response.data
-#     assert b"Sample dataset 2" in response.data
-#     with test_client.application.app_context():
-#         db.session.delete(ds_download_record1)
-#         db.session.delete(ds_download_record2)
-#         db.session.delete(ds_download_record3)
-#         db.session.delete(ds2)
-#         db.session.commit()
-#
 def test_trending_datasets(test_client):
     import uuid
     from datetime import datetime
