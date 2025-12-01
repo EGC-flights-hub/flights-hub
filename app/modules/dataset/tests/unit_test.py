@@ -1,8 +1,9 @@
-import pytest
 import re
 import uuid
 
-from app.modules.dataset.models import DataSet, DSMetaData, DSViewRecord, DSDownloadRecord
+import pytest
+
+from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData, DSViewRecord
 
 
 @pytest.fixture(scope="module")
@@ -10,7 +11,13 @@ def test_dataset_id(test_client):
     from app import db
 
     with test_client.application.app_context():
-        ds_meta = DSMetaData(title="Test Dataset", description="This is a test dataset", publication_type="NONE", dataset_doi="122345/test_ds", tags="tag1,tag2")
+        ds_meta = DSMetaData(
+            title="Test Dataset",
+            description="This is a test dataset",
+            publication_type="NONE",
+            dataset_doi="122345/test_ds",
+            tags="tag1,tag2",
+        )
         db.session.add(ds_meta)
         db.session.commit()
 
@@ -49,26 +56,26 @@ def test_dataset_badge_html(test_client, test_dataset_id):
 
 
 def test_download_count_present_in_body(test_client):
-    response = test_client.get(f"/doi/122345/test_ds/")
+    response = test_client.get("/doi/122345/test_ds/")
     assert response.status_code == 200
     assert b"Downloads" in response.data
 
-def test_download_count_feat(test_client, test_dataset_id):
-    response = test_client.get(f"/doi/122345/test_ds/")
+
+def test_download_count_feat(test_client):
+    response = test_client.get("/doi/122345/test_ds/")
     assert response.status_code == 200
     assert b"Downloads" in response.data
-    
+
     html = response.data.decode("utf-8")
     init_downloads = get_downloads_from_html(html)
-    
-    download = test_client.get(f"/dataset/download/1")
-    response2 = test_client.get(f"/doi/122345/test_ds/")
+
+    test_client.get("/dataset/download/1")
+    response2 = test_client.get("/doi/122345/test_ds/")
     html2 = response2.data.decode("utf-8")
     new_downloads = get_downloads_from_html(html2)
     assert new_downloads != init_downloads
-    assert new_downloads == (init_downloads+1)
+    assert new_downloads == (init_downloads + 1)
 
-    
 
 def get_downloads_from_html(html):
     # Busca la celda <td>Downloads</td> seguida de otra celda <td>...</td>
