@@ -40,11 +40,13 @@ def test_dataset_badge_html(test_client, test_dataset_id):
     assert b"<img" in response.data
     assert b"Test_Dataset" in response.data
 
+
 def test_trending_datasets_view(test_client):
     response = test_client.get("/")
     assert response.status_code == 200
     assert b"<h2> <b>Trending datasets</b> </h2>" in response.data
-    
+
+
 # def test_trending_datasets(test_client):
 #     from app import db
 #     with test_client.application.app_context():
@@ -62,8 +64,8 @@ def test_trending_datasets_view(test_client):
 #         db.session.commit()
 #     response = test_client.get("/")
 #     assert response.status_code == 200
-#     assert b"<h2> <b>Trending datasets</b> </h2>" in response.data 
-#     assert b"Sample dataset 1" in response.data 
+#     assert b"<h2> <b>Trending datasets</b> </h2>" in response.data
+#     assert b"Sample dataset 1" in response.data
 #     assert b"Sample dataset 2" in response.data
 #     with test_client.application.app_context():
 #         db.session.delete(ds_download_record1)
@@ -73,18 +75,15 @@ def test_trending_datasets_view(test_client):
 #         db.session.commit()
 #
 def test_trending_datasets(test_client):
+    import uuid
+    from datetime import datetime
+
     from app import db
     from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData
     from app.modules.dataset.services import DataSetService
-    from datetime import datetime
-    import uuid
 
     with test_client.application.app_context():
-        ds_meta = DSMetaData(
-            title="Test Dataset Meta",
-            description="Meta for test datasets",
-            publication_type="OTHER"
-        )
+        ds_meta = DSMetaData(title="Test Dataset Meta", description="Meta for test datasets", publication_type="OTHER")
         db.session.add(ds_meta)
         db.session.commit()
 
@@ -95,25 +94,19 @@ def test_trending_datasets(test_client):
         db.session.commit()
 
         download1 = DSDownloadRecord(
-            dataset_id=ds1.id,
-            download_date=datetime.utcnow(),
-            download_cookie=str(uuid.uuid4())
+            dataset_id=ds1.id, download_date=datetime.utcnow(), download_cookie=str(uuid.uuid4())
         )
         download2 = DSDownloadRecord(
-            dataset_id=ds1.id,
-            download_date=datetime.utcnow(),
-            download_cookie=str(uuid.uuid4())
+            dataset_id=ds1.id, download_date=datetime.utcnow(), download_cookie=str(uuid.uuid4())
         )
 
         download3 = DSDownloadRecord(
-            dataset_id=ds2.id,
-            download_date=datetime.utcnow(),
-            download_cookie=str(uuid.uuid4())
+            dataset_id=ds2.id, download_date=datetime.utcnow(), download_cookie=str(uuid.uuid4())
         )
 
-        db.session.add_all([download1, download2,download3])
+        db.session.add_all([download1, download2, download3])
         db.session.commit()
-        
+
         service = DataSetService()
         assert service.trending_datasets() == [(ds1, 2), (ds2, 1)]
 
