@@ -85,3 +85,16 @@ class TestUploadanddownloadds:
         self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(5)").click()
         self.driver.find_element(By.LINK_TEXT, "Doe, John").click()
         self.driver.find_element(By.LINK_TEXT, "Log out").click()
+
+    def test_download_count(self):
+        self.driver.get("http://localhost:5000/")
+        self.driver.set_window_size(592, 734)
+        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .row > .badge").click()
+        self.driver.find_element(By.LINK_TEXT, "Download (84 bytes)").click()
+        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .row > .badge").click()
+        self.driver.find_element(By.CSS_SELECTOR, ".sidebar-toggle").click()
+        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn:nth-child(2) > .feather").click()
+        self.driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
+        self.driver.find_element(By.LINK_TEXT, "Download all (84 bytes)").click()
+        self.driver.find_element(By.LINK_TEXT, "Sample dataset 2").click()
+        self.driver.find_element(By.LINK_TEXT, "Download all (81 bytes)").click()
