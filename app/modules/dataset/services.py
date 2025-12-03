@@ -9,7 +9,9 @@ from typing import Optional
 from flask import request
 
 from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import CSVFile, DataSet, DSMetaData, DSViewRecord
+from app.modules.dataset.models import CSVFile, DataSet
+from app.modules.dataset.models import DSMetaData, DSViewRecord
+
 from app.modules.dataset.repositories import (
     AuthorRepository,
     DataSetRepository,
@@ -44,7 +46,10 @@ class DataSetService(BaseService):
         source_dir = current_user.temp_folder()
 
         working_dir = os.getenv("WORKING_DIR", "")
-        dest_dir = os.path.join(working_dir, "uploads", f"user_{current_user.id}", f"dataset_{dataset.id}")
+        dest_dir = os.path.join(working_dir,
+                                "uploads",
+                                f"user_{current_user.id}",
+                                f"dataset_{dataset.id}")
 
         os.makedirs(dest_dir, exist_ok=True)
 
@@ -57,8 +62,10 @@ class DataSetService(BaseService):
     def get_unsynchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_unsynchronized(current_user_id)
 
-    def get_unsynchronized_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
-        return self.repository.get_unsynchronized_dataset(current_user_id, dataset_id)
+    def get_unsynchronized_dataset(self, current_user_id: int,
+                                   dataset_id: int) -> DataSet:
+        return self.repository.get_unsynchronized_dataset(current_user_id,
+                                                          dataset_id)
 
     def latest_synchronized(self):
         return self.repository.latest_synchronized()
@@ -83,26 +90,35 @@ class DataSetService(BaseService):
 
     def create_from_form(self, form, current_user) -> DataSet:
         main_author = {
-            "name": f"{current_user.profile.surname}, {current_user.profile.name}",
+            "name": f"{current_user.
+                       profile.surname},{current_user.profile.name}",
             "affiliation": current_user.profile.affiliation,
             "orcid": current_user.profile.orcid,
         }
         try:
             logger.info(f"Creating dsmetadata...: {form.get_dsmetadata()}")
-            dsmetadata = self.dsmetadata_repository.create(**form.get_dsmetadata())
+            dsmetadata = self.dsmetadata_repository.create(**form.
+                                                           get_dsmetadata())
             for author_data in [main_author] + form.get_authors():
-                author = self.author_repository.create(commit=False, ds_meta_data_id=dsmetadata.id, **author_data)
+                author = self.author_repository.create(
+                    commit=False,
+                    ds_meta_data_id=dsmetadata.id,
+                    **author_data)
                 dsmetadata.authors.append(author)
 
-            dataset = self.create(commit=False, user_id=current_user.id, ds_meta_data_id=dsmetadata.id)
+            dataset = self.create(commit=False,
+                                  user_id=current_user.id,
+                                  ds_meta_data_id=dsmetadata.id)
 
             # Add CSV files to the dataset
             for csv_file_field in form.csv_files:
                 csv_filename = csv_file_field.csv_filename.data
-                file_path = os.path.join(current_user.temp_folder(), csv_filename)
+                file_path = os.path.join(current_user.temp_folder(),
+                                         csv_filename)
                 checksum, size = calculate_checksum_and_size(file_path)
 
-                csv_file = CSVFile(name=csv_filename, checksum=checksum, size=size, dataset_id=dataset.id)
+                csv_file = CSVFile(name=csv_filename, checksum=checksum,
+                                   size=size, dataset_id=dataset.id)
                 dataset.csv_files.append(csv_file)
 
             self.repository.session.commit()
@@ -138,7 +154,8 @@ class DataSetService(BaseService):
             try:
                 next(reader)
             except StopIteration:
-                return False, "CSV must contain a header and at least one data row."
+                return False,
+                "CSV must contain a header and at least one data row."
 
             file.seek(0)
 
@@ -158,9 +175,12 @@ class DataSetService(BaseService):
 
         target_tags = set()
         if target_dataset.ds_meta_data.tags:
-            target_tags = {t.strip().lower() for t in target_dataset.ds_meta_data.tags.split(",")}
+            target_tags = {t.strip().lower()
+                           for t in target_dataset.
+                           ds_meta_data.tags.split(",")}
 
-        target_authors = {a.name.strip().lower() for a in target_dataset.ds_meta_data.authors}
+        target_authors = {a.name.strip().lower()
+                          for a in target_dataset.ds_meta_data.authors}
 
         all_datasets = self.repository.get_all()
 
@@ -176,11 +196,13 @@ class DataSetService(BaseService):
             score = 0
 
             if ds.ds_meta_data.tags:
-                ds_tags = {t.strip().lower() for t in ds.ds_meta_data.tags.split(",")}
+                ds_tags = {t.strip().lower()
+                           for t in ds.ds_meta_data.tags.split(",")}
                 common_tags = target_tags.intersection(ds_tags)
                 score += len(common_tags)
 
-            ds_authors = {a.name.strip().lower() for a in ds.ds_meta_data.authors}
+            ds_authors = {a.name.strip().lower()
+                          for a in ds.ds_meta_data.authors}
             common_authors = target_authors.intersection(ds_authors)
             score += len(common_authors)
 
@@ -188,8 +210,8 @@ class DataSetService(BaseService):
                 candidates.append({"dataset": ds, "score": score})
 
         candidates.sort(key=lambda x: (
-            x['score'], 
-            x['dataset'].ds_meta_data.downloads, 
+            x['score'],
+            x['dataset'].ds_meta_data.downloads,
             x['dataset'].created_at
         ), reverse=True)
 
@@ -224,7 +246,9 @@ class DSViewRecordService(BaseService):
     def the_record_exists(self, dataset: DataSet, user_cookie: str):
         return self.repository.the_record_exists(dataset, user_cookie)
 
-    def create_new_record(self, dataset: DataSet, user_cookie: str) -> DSViewRecord:
+    def create_new_record(self,
+                          dataset: DataSet,
+                          user_cookie: str) -> DSViewRecord:
         return self.repository.create_new_record(dataset, user_cookie)
 
     def create_cookie(self, dataset: DataSet) -> str:
@@ -233,7 +257,8 @@ class DSViewRecordService(BaseService):
         if not user_cookie:
             user_cookie = str(uuid.uuid4())
 
-        existing_record = self.the_record_exists(dataset=dataset, user_cookie=user_cookie)
+        existing_record = self.the_record_exists(dataset=dataset,
+                                                 user_cookie=user_cookie)
 
         if not existing_record:
             self.create_new_record(dataset=dataset, user_cookie=user_cookie)
