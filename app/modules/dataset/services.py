@@ -187,7 +187,11 @@ class DataSetService(BaseService):
             if score > 0:
                 candidates.append({"dataset": ds, "score": score})
 
-        candidates.sort(key=lambda x: x["score"], reverse=True)
+        candidates.sort(key=lambda x: (
+            x['score'], 
+            x['dataset'].ds_meta_data.downloads, 
+            x['dataset'].created_at
+        ), reverse=True)
 
         return [item["dataset"] for item in candidates[:4]]
 
