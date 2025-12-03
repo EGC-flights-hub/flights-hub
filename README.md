@@ -8,7 +8,7 @@
 **Repository of flight data in CSV format**, adapted from the original [uvlhub](https://www.uvlhub.io) project.
 This platform maintains the same open-science principles and technical foundations as *uvlhub*, but is repurposed to host and manage **flight datasets** in CSV format instead of UVL feature models.
 
-Developed by **DiversoLab**, this adaptation, *flights-hub*, integrates data management, visualisation, and interoperability tools for research and analysis of flight-related information.
+Developed by **DiversoLab**, this adaptation, *flights-hub*, integrates data management, visualisation, and interoperability tools for research and analysis of flight-related information. Check our Installation Guide if you want to run it locally.
 
 ---
 
@@ -39,3 +39,15 @@ You can also check our ./doc folder with our own documentation!
 ## Overview of the development process
 
 We follow a GitFlow-based process where branches are short-lived and commits are atomic. We also embrace a DevSecOps cycle designed to build secure software from the very beginning, integrating security and quality checks seamlessly into our development flow.
+
+---
+
+## Installation Guide
+
+You can follow those links to learn how to install the project.
+
+- [Manual Installation](https://docs.uvlhub.io/installation/manual_installation)
+
+- [Installation with docker](https://docs.uvlhub.io/installation/installation_with_docker)
+
+- [Installation with Vagrant](https://docs.uvlhub.io/installation/installation_with_vagrant)
