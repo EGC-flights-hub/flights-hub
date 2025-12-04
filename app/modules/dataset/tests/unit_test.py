@@ -3,6 +3,7 @@ import uuid
 
 import pytest
 
+from app.modules.conftest import login
 from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData, DSViewRecord
 
 
@@ -131,3 +132,26 @@ def get_downloads_from_html(html):
     match = re.search(patron, html, re.IGNORECASE)
     downloads_value = int(match.group(1))
     return downloads_value
+
+
+def test_list_dataset_without_login(test_client):
+    response = test_client.get("/dataset/list")
+    assert response.status_code == 302
+
+
+def test_list_dataset(test_client):
+    login_response = login(test_client, "test@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    response = test_client.get("/dataset/list")
+    assert response.status_code == 200
+    assert b"My datasets" in response.data
+
+
+def test_get_dataset_upload(test_client):
+    login_response = login(test_client, "test@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    response = test_client.get("/dataset/upload")
+    assert response.status_code == 200
+    assert b"Upload" in response.data
