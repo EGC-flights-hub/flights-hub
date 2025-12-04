@@ -45,6 +45,16 @@ def test_download_count(driver, host):
     driver.find_element(By.LINK_TEXT, "Download all (84 bytes)").click()
 
 
+def test_recomendation(self):
+    self.driver.get("http://127.0.0.1:5000/")
+    self.driver.set_window_size(914, 1184)
+    self.driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
+    self.driver.find_element(By.CSS_SELECTOR,
+                             ".list-group-item:nth-child(1) > .d-flex > .mb-1").click()
+    self.driver.find_element(By.CSS_SELECTOR,
+                             ".list-group-item:nth-child(5) > .d-flex > .mb-1").click()
+
+
 def test_index():
 
     driver = initialize_driver()
