@@ -537,6 +537,72 @@
             })
             .catch((error) => { console.error("Error en la petición del badge:", error); }); 
     }
+
+    function loadVersionComparison() {
+        const compareVersionId = document.getElementById('compareVersionSelect').value;
+        const resultsDiv = document.getElementById('comparisonResults');
+        const datasetId = {{ dataset.id }};
+
+        if (!compareVersionId) {
+            resultsDiv.innerHTML = '';
+            return;
+        }
+
+        fetch(`/dataset/${datasetId}/compare?version_id=${compareVersionId}`)
+            .then(response => {
+                if (!response.ok) throw new Error("Network response was not ok");
+                return response.json();
+            })
+            .then(data => {
+                if (!data) {
+                    resultsDiv.innerHTML = '<div class="alert alert-info">No changes between versions</div>';
+                    return;
+                }
+
+                let html = '<div class="card">';
+                html += '<div class="card-body">';
+
+                // Added files
+                if (data.added && data.added.length > 0) {
+                    html += '<h6 class="text-success"><i data-feather="plus-circle"></i> Added Files</h6>';
+                    html += '<ul class="list-unstyled">';
+                    data.added.forEach(file => {
+                        html += `<li><code>${file.name}</code> (${file.size_in_human_format})</li>`;
+                    });
+                    html += '</ul><hr>';
+                }
+
+                // Removed files
+                if (data.removed && data.removed.length > 0) {
+                    html += '<h6 class="text-danger"><i data-feather="minus-circle"></i> Removed Files</h6>';
+                    html += '<ul class="list-unstyled">';
+                    data.removed.forEach(file => {
+                        html += `<li><code>${file.name}</code> (${file.size_in_human_format})</li>`;
+                    });
+                    html += '</ul><hr>';
+                }
+
+                // Modified files
+                if (data.modified && data.modified.length > 0) {
+                    html += '<h6 class="text-warning"><i data-feather="edit-2"></i> Modified Files</h6>';
+                    html += '<ul class="list-unstyled">';
+                    data.modified.forEach(file => {
+                        html += `<li><code>${file.name}</code>`;
+                        html += `<br><small class="text-muted">Previous: ${file.previous.size_in_human_format}</small>`;
+                        html += `<br><small class="text-muted">Current: ${file.current.size_in_human_format}</small></li>`;
+                    });
+                    html += '</ul>';
+                }
+
+                html += '</div></div>';
+                resultsDiv.innerHTML = html;
+                feather.replace();
+            })
+            .catch((error) => { 
+                resultsDiv.innerHTML = `<div class="alert alert-danger">Error loading comparison: ${error.message}</div>`;
+                console.error("Error en la comparación:", error); 
+            });
+    }
 </script>
 
 
