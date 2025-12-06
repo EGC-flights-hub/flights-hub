@@ -210,9 +210,15 @@
                 
                 <div class="list-group list-group-flush">
                     {% for related in related_datasets %}
+                    {% if related.ds_meta_data.dataset_doi %}
                     <a href="{{ url_for('dataset.subdomain_index', doi=related.ds_meta_data.dataset_doi) }}" 
                        class="list-group-item list-group-item-action" 
                        style="border: none; padding-left: 0;">
+                    {% else %}
+                    <a href="{{ url_for('dataset.get_unsynchronized_dataset', dataset_id=related.id) }}" 
+                       class="list-group-item list-group-item-action" 
+                       style="border: none; padding-left: 0;">
+                    {% endif %}
                         
                         <div class="d-flex w-100 justify-content-between">
                             <h5 class="mb-1" style="color: #007bff;">{{ related.ds_meta_data.title }}</h5>
