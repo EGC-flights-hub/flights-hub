@@ -110,7 +110,7 @@ class DataSetRepository(BaseRepository):
     def latest_synchronized(self):
         return (
             self.model.query.join(DSMetaData)
-            .filter(DSMetaData.dataset_doi.isnot(None))
+            .filter(~self.model.next_version.any())  # Only get latest versions
             .order_by(desc(self.model.id))
             .limit(5)
             .all()
