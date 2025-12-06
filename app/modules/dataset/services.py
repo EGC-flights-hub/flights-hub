@@ -232,6 +232,74 @@ class DataSetService(BaseService):
 
         return [item["dataset"] for item in candidates[:4]]
 
+    def create_new_version(self, dataset: DataSet, files_to_delete: list, current_user) -> DataSet:
+        try:
+            new_metadata = self.dsmetadata_repository.create(
+                title=dataset.ds_meta_data.title,
+                description=dataset.ds_meta_data.description,
+                publication_type=dataset.ds_meta_data.publication_type,
+                publication_doi=dataset.ds_meta_data.publication_doi,
+                dataset_doi=dataset.ds_meta_data.dataset_doi,
+                tags=dataset.ds_meta_data.tags,
+                ds_metrics_id=dataset.ds_meta_data.ds_metrics_id,
+                deposition_id=dataset.ds_meta_data.deposition_id,
+                downloads=dataset.ds_meta_data.downloads,
+                commit=False
+            )
+
+            for author in dataset.ds_meta_data.authors:
+                new_author = self.author_repository.create(
+                    commit=False,
+                    ds_meta_data_id=new_metadata.id,
+                    name=author.name,
+                    affiliation=author.affiliation,
+                    orcid=author.orcid
+                )
+                new_metadata.authors.append(new_author)
+
+            new_dataset = self.create(
+                commit=False,
+                user_id=current_user.id,
+                ds_meta_data_id=new_metadata.id,
+                version=dataset.version + 1,
+                previous_version_id=dataset.id
+            )
+
+            self.repository.session.commit()
+
+            working_dir = os.getenv("WORKING_DIR", "")
+            old_dir = os.path.join(working_dir, "uploads", f"user_{current_user.id}", f"dataset_{dataset.id}")
+            new_dir = os.path.join(working_dir, "uploads", f"user_{current_user.id}", f"dataset_{new_dataset.id}")
+
+            os.makedirs(new_dir, exist_ok=True)
+
+            for csv_file in dataset.csv_files:
+                if csv_file.id not in files_to_delete:
+                    old_file_path = os.path.join(old_dir, csv_file.name)
+                    new_file_path = os.path.join(new_dir, csv_file.name)
+
+                    if os.path.exists(old_file_path):
+                        shutil.copy2(old_file_path, new_file_path)
+
+                        # Create new CSVFile entry
+                        checksum, size = calculate_checksum_and_size(new_file_path)
+                        new_csv_file = CSVFile(
+                            name=csv_file.name,
+                            checksum=checksum,
+                            size=size,
+                            dataset_id=new_dataset.id
+                        )
+                        new_dataset.csv_files.append(new_csv_file)
+
+            self.repository.session.commit()
+
+            return new_dataset
+
+        except Exception as exc:
+            logger.exception(f"Exception creating new dataset version: {exc}")
+            self.repository.session.rollback()
+            raise exc
+
 
 class AuthorService(BaseService):
     def __init__(self):
