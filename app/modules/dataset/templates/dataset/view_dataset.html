@@ -36,8 +36,19 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between">
-                    <h1><b>{{ dataset.ds_meta_data.title }}</b></h1>
                     <div>
+                        <h1><b>{{ dataset.ds_meta_data.title }}</b></h1>
+                        {% if dataset.version > 1 %}
+                        <small class="text-muted">v{{ dataset.version }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        {% if current_user.is_authenticated and current_user.id == dataset.user_id %}
+                        <a href="{{ url_for('dataset.edit_dataset', dataset_id=dataset.id) }}" class="btn btn-warning btn-sm" style="border-radius: 5px;">
+                            <i data-feather="edit-3" class="center-button-icon"></i>
+                            Edit
+                        </a>
+                        {% endif %}
                         <span class="badge bg-secondary">{{ dataset.get_cleaned_publication_type() }}</span>
                     </div>
                 </div>
