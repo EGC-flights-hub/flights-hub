@@ -151,6 +151,7 @@ class DataSet(db.Model):
             "tags": self.ds_meta_data.tags.split(",") if self.ds_meta_data.tags else [],
             "url": self.get_dataset_doi(),
             "download": f'{request.host_url.rstrip("/")}/dataset/download/{self.id}',
+            "version": self.version,
             "zenodo": self.get_zenodo_url(),
             "files": [file.to_dict() for file in self.csv_files],
             "files_count": self.get_files_count(),
