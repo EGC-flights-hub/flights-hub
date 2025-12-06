@@ -294,7 +294,26 @@
 
     <div class="col-xl-4 col-lg-12 col-md-12 col-sm-12">
 
-        <div class="list-group">
+        <!-- Tabs for Files and Versions -->
+        <ul class="nav nav-tabs" id="datasetTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" type="button" role="tab" aria-controls="files" aria-selected="true">
+                    Files
+                </button>
+            </li>
+            {% if dataset.version > 1 %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="versions-tab" data-bs-toggle="tab" data-bs-target="#versions" type="button" role="tab" aria-controls="versions" aria-selected="false">
+                    Versions
+                </button>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="tab-content" id="datasetTabContent">
+            <!-- Files Tab -->
+            <div class="tab-pane fade show active" id="files" role="tabpanel" aria-labelledby="files-tab">
+                <div class="list-group">
 
             <div class="list-group-item">
 
@@ -350,6 +369,31 @@
                 </div>
             </div>
             {% endfor %}
+                </div>
+            </div>
+
+            {% if dataset.version > 1 %}
+            <!-- Versions Tab -->
+            <div class="tab-pane fade" id="versions" role="tabpanel" aria-labelledby="versions-tab">
+                <div class="list-group mt-3">
+                    <div class="list-group-item">
+                        <div class="row">
+                            <div class="col-12">
+                                <label for="compareVersionSelect" class="form-label"><b>Compare with version:</b></label>
+                                <select id="compareVersionSelect" class="form-select" onchange="loadVersionComparison()">
+                                    <option value="">-- Select version --</option>
+                                    {% for version in dataset.get_all_previous_versions() %}
+                                    <option value="{{ version.id }}">v{{ version.version }} ({{ version.created_at.strftime('%B %d, %Y') }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="comparisonResults" class="mt-3"></div>
+            </div>
+            {% endif %}
         </div>
 
 
