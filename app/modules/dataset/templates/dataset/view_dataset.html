@@ -396,7 +396,30 @@
             {% endif %}
         </div>
 
-
+        {% set all_versions = dataset.get_all_versions() %}
+        {% if all_versions|length > 1 %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <label for="versionSelector" class="form-label">
+                    <strong>Available Versions ({{ all_versions|length }})</strong>
+                </label>
+                <div class="input-group">
+                    <select class="form-select" id="versionSelector" onchange="handleVersionChange()">
+                        {% for version in all_versions|reverse %}
+                            <option value="{{ version.id }}" {% if version.id == dataset.id %}selected{% endif %}>
+                                v{{ version.version }} - {{ version.created_at.strftime('%B %d, %Y') }}
+                                {% if version.id == dataset.id %} (Current){% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <a id="versionDownloadLink" href="/dataset/download/{{ dataset.id }}" class="btn btn-primary" style="border-radius: 5px 0 0 5px;">
+                        <i data-feather="download" class="center-button-icon"></i>
+                        Download
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <a href="/dataset/download/{{ dataset.id }}" class="btn btn-primary mt-3" style="border-radius: 5px;">
             <i data-feather="download" class="center-button-icon"></i>
@@ -614,6 +637,16 @@
                 resultsDiv.innerHTML = `<div class="alert alert-danger">Error loading comparison: ${error.message}</div>`;
                 console.error("Error en la comparación:", error); 
             });
+    }
+
+    function handleVersionChange() {
+        const versionSelector = document.getElementById('versionSelector');
+        const selectedVersionId = versionSelector.value;
+        const downloadLink = document.getElementById('versionDownloadLink');
+        const datasetId = {{ dataset.id }};
+        
+        // Update the download link to include the version_id parameter
+        downloadLink.href = `/dataset/download/${datasetId}/${selectedVersionId}`;
     }
 </script>
 
