@@ -434,3 +434,43 @@ def edit_dataset(dataset_id):
         dataset=dataset,
         form=form
     )
+
+
+@dataset_bp.route("/dataset/<int:dataset_id>/update", methods=["POST"])
+@login_required
+def update_dataset(dataset_id):
+    """
+    Update a dataset by uploading new files or removing files.
+    Creates a new version and maintains previous version link.
+    """
+    dataset = dataset_service.get_by_id(dataset_id)
+    if not dataset:
+        return jsonify({"error": "Dataset not found"}), 404
+
+    # Only the owner can edit the dataset
+    if current_user.id != dataset.user_id:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    # Get the list of files to delete and files to add
+    data = request.get_json() or {}
+    files_to_delete = data.get("files_to_delete", [])
+
+    try:
+        # Create a new version as a copy of the current one
+        new_version = dataset_service.create_new_version(
+            dataset,
+            files_to_delete,
+            current_user
+        )
+
+        # Move new CSV files from temp folder to the new version's directory
+        dataset_service.move_csv_files(new_version)
+
+        return jsonify({
+            "message": "Dataset updated successfully",
+            "new_version_id": new_version.id,
+            "version": new_version.version
+        }), 200
+    except Exception as e:
+        logger.exception(f"Exception updating dataset: {e}")
+        return jsonify({"error": str(e)}), 500
