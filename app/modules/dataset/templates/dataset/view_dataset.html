@@ -555,7 +555,19 @@
             })
             .then(data => {
                 if (!data) {
-                    resultsDiv.innerHTML = '<div class="alert alert-info">No changes between versions</div>';
+                    resultsDiv.innerHTML = '<div class="alert alert-info"><i data-feather="info"></i> No changes between versions</div>';
+                    feather.replace();
+                    return;
+                }
+
+                // Check if there are any changes at all
+                const hasChanges = (data.added && data.added.length > 0) ||
+                                   (data.removed && data.removed.length > 0) ||
+                                   (data.modified && data.modified.length > 0);
+
+                if (!hasChanges) {
+                    resultsDiv.innerHTML = '<div class="alert alert-info"><i data-feather="info"></i> No changes between versions</div>';
+                    feather.replace();
                     return;
                 }
 
