@@ -287,18 +287,28 @@ def subdomain_index(doi):
 
 
 @dataset_bp.route("/dataset/unsynchronized/<int:dataset_id>/", methods=["GET"])
-@login_required
 def get_unsynchronized_dataset(dataset_id):
 
     # Get dataset
-    dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
+    if current_user.is_authenticated:
+        dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
+    else:
+        # Allow anonymous users to view unsynchronized datasets
+        dataset = (
+            DataSet.query.filter_by(id=dataset_id)
+            .join(DSMetaData)
+            .filter(DSMetaData.dataset_doi.is_(None))
+            .first()
+        )
 
     if not dataset:
         abort(404)
 
     related_datasets = dataset_service.get_related_datasets(dataset.id)
 
-    return render_template("dataset/view_dataset.html", dataset=dataset, related_datasets=related_datasets)
+    return render_template(
+        "dataset/view_dataset.html", dataset=dataset, related_datasets=related_datasets
+    )
 
 
 @dataset_bp.route("/dataset/<int:dataset_id>/badge/md", methods=["GET"])
