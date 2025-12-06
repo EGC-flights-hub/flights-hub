@@ -183,13 +183,24 @@ def delete():
 
 
 @dataset_bp.route("/dataset/download/<int:dataset_id>", methods=["GET"])
-def download_dataset(dataset_id):
+@dataset_bp.route("/dataset/download/<int:dataset_id>/<int:version_id>", methods=["GET"])
+def download_dataset(dataset_id, version_id=None):
     dataset = dataset_service.get_or_404(dataset_id)
+    
+    # If a specific version is requested, use that; otherwise use the current dataset
+    if version_id is not None:
+        download_dataset_obj = dataset_service.get_or_404(version_id)
+        # Verify that the version belongs to this dataset chain
+        all_versions = dataset.get_all_versions()
+        if download_dataset_obj not in all_versions:
+            abort(404)
+    else:
+        download_dataset_obj = dataset
 
-    file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
+    file_path = f"uploads/user_{download_dataset_obj.user_id}/dataset_{download_dataset_obj.id}/"
 
     temp_dir = tempfile.mkdtemp()
-    zip_path = os.path.join(temp_dir, f"dataset_{dataset_id}.zip")
+    zip_path = os.path.join(temp_dir, f"dataset_{dataset_id}_v{download_dataset_obj.version}.zip")
 
     with ZipFile(zip_path, "w") as zipf:
         for subdir, dirs, files in os.walk(file_path):
@@ -210,7 +221,7 @@ def download_dataset(dataset_id):
         resp = make_response(
             send_from_directory(
                 temp_dir,
-                f"dataset_{dataset_id}.zip",
+                f"dataset_{dataset_id}_v{download_dataset_obj.version}.zip",
                 as_attachment=True,
                 mimetype="application/zip",
             )
@@ -219,7 +230,7 @@ def download_dataset(dataset_id):
     else:
         resp = send_from_directory(
             temp_dir,
-            f"dataset_{dataset_id}.zip",
+            f"dataset_{dataset_id}_v{download_dataset_obj.version}.zip",
             as_attachment=True,
             mimetype="application/zip",
         )
