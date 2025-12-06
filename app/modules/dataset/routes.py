@@ -21,7 +21,7 @@ from flask_login import current_user, login_required
 
 from app.modules.dataset import dataset_bp
 from app.modules.dataset.forms import DataSetForm
-from app.modules.dataset.models import DSDownloadRecord
+from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData
 from app.modules.dataset.services import (
     AuthorService,
     DataSetService,
