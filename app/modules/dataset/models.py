@@ -162,6 +162,15 @@ class DataSet(db.Model):
     def __repr__(self):
         return f"DataSet<{self.id}>"
 
+    def get_all_previous_versions(self):
+        """Get all previous versions in chronological order (oldest to newest)"""
+        versions = []
+        current = self.previous_version
+        while current:
+            versions.append(current)
+            current = current.previous_version
+        return versions
+
     def compare_with_version(self, other_version=None):
         if other_version is None:
             other_version = self.previous_version
