@@ -135,7 +135,7 @@ class DataSet(db.Model):
     def get_dataset_doi(self):
         if self.ds_meta_data.dataset_doi:
             return f"/doi/{self.ds_meta_data.dataset_doi}/"
-        return None
+        return f"/dataset/unsynchronized/{self.id}/"
 
     def to_dict(self):
         return {
