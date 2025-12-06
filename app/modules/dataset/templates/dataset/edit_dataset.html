@@ -1,0 +1,297 @@
+{% extends "base_template.html" %}
+
+{% block title %}Edit dataset{% endblock %}
+
+{% block content %}
+
+    <h1 class="h2 mb-3"><b>Edit</b> dataset - v{{ dataset.version }}</h1>
+
+    <div class="row">
+        <div class="col-12 mb-3">
+            <button onclick="window.history.back()" class="btn btn-secondary">
+                <i data-feather="arrow-left"></i>
+                Back to dataset
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Dataset Information</h3>
+                    
+                    <div class="mb-3">
+                        <label class="form-label"><b>Title:</b></label>
+                        <p class="form-control-plaintext">{{ dataset.ds_meta_data.title }}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><b>Description:</b></label>
+                        <p class="form-control-plaintext">{{ dataset.ds_meta_data.description }}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><b>Current Version:</b></label>
+                        <p class="form-control-plaintext">{{ dataset.version }}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><b>Created:</b></label>
+                        <p class="form-control-plaintext">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                    </div>
+
+                    <hr>
+
+                    <h5 class="mb-3">
+                        <i data-feather="info"></i>
+                        Note about editing
+                    </h5>
+                    <p class="text-muted">
+                        When you edit this dataset, a new version will be created with your changes. 
+                        The previous version will be preserved and users will be able to compare the differences 
+                        between versions on the dataset page.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Current Files</h3>
+                    
+                    <div id="currentFilesList" class="list-group mt-3">
+                        {% for file in dataset.csv_files %}
+                        <div class="list-group-item" id="file-item-{{ file.id }}">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <input type="checkbox" class="form-check-input file-delete-checkbox" 
+                                           value="{{ file.id }}" data-file-name="{{ file.name }}">
+                                </div>
+                                <div class="col">
+                                    <div>
+                                        <i data-feather="file"></i>
+                                        <strong>{{ file.name }}</strong>
+                                    </div>
+                                    <small class="text-muted">({{ file.get_formatted_size() }})</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if dataset.csv_files %}
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteSelectedFiles()">
+                            <i data-feather="trash-2"></i>
+                            Delete Selected Files
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Add New Files</h3>
+
+                    <p class="text-muted mb-3">Upload new CSV files to create a new version of this dataset. Files will be added to the next version.</p>
+
+                    <div class="alert alert-info" role="alert">
+                        <i data-feather="info"></i> <strong>Note:</strong> When you click "Create New Version", all changes will be saved and a new version will be created.
+                    </div>
+
+                    <form action="{{ url_for('dataset.upload') }}" class="dropzone" id="myDropzone">
+                        <div id="dropzone-text">
+                            <p>Drop CSV files here or click to select</p>
+                        </div>
+                    </form>
+
+                    <span class="text-danger" id="alerts" style="display: none"></span>
+
+                    <ul class="mt-2 list-group" id="file-list"></ul>
+
+                    <script>
+                        let filesToDelete = [];
+                        let uploadedFileCount = 0;
+
+                        let dropzone = Dropzone.options.myDropzone = {
+                            url: "/dataset/file/upload",
+                            paramName: 'file',
+                            maxFilesize: 10,
+                            acceptedFiles: '.csv',
+                            init: function () {
+                                let fileList = document.getElementById('file-list');
+                                let dropzoneText = document.getElementById('dropzone-text');
+                                let alerts = document.getElementById('alerts');
+
+                                this.on('addedfile', function (file) {
+                                    let ext = file.name.split('.').pop();
+                                    if (ext !== 'csv') {
+                                        this.removeFile(file);
+                                        let alert = document.createElement('p');
+                                        alert.textContent = 'Invalid file extension: ' + file.name;
+                                        alerts.appendChild(alert);
+                                        alerts.style.display = 'block';
+                                    }
+                                });
+
+                                this.on('success', function (file, response) {
+                                    console.log("File uploaded: ", response);
+
+                                    let listItem = document.createElement('li');
+                                    listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                                    listItem.id = 'upload-' + response.filename;
+
+                                    let span = document.createElement('span');
+                                    let badge = document.createElement('span');
+                                    badge.className = 'badge bg-success';
+                                    badge.textContent = 'New';
+                                    span.appendChild(badge);
+
+                                    let nameSpan = document.createElement('span');
+                                    nameSpan.textContent = ' ' + response.filename;
+                                    span.appendChild(nameSpan);
+
+                                    listItem.appendChild(span);
+
+                                    let removeButton = document.createElement('button');
+                                    removeButton.innerHTML = '<i data-feather="trash-2"></i>';
+                                    removeButton.classList.add("btn", "btn-sm", "btn-outline-danger");
+                                    removeButton.style.borderRadius = '5px';
+                                    removeButton.type = 'button';
+
+                                    removeButton.addEventListener('click', function () {
+                                        fileList.removeChild(listItem);
+                                        this.removeFile(file);
+                                        uploadedFileCount--;
+                                        let xhr = new XMLHttpRequest();
+                                        xhr.open('POST', '/dataset/file/delete', true);
+                                        xhr.setRequestHeader('Content-Type', 'application/json');
+                                        xhr.send(JSON.stringify({file: file.name}));
+                                        
+                                        if (filesToDelete.length === 0 && uploadedFileCount === 0) {
+                                            document.getElementById('updateButton').style.display = 'none';
+                                        }
+                                    }.bind(this));
+
+                                    listItem.appendChild(removeButton);
+                                    fileList.appendChild(listItem);
+                                    
+                                    uploadedFileCount++;
+
+                                    // Show update button
+                                    document.getElementById('updateButton').style.display = 'block';
+                                    feather.replace();
+                                });
+                            }
+                        };
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <button type="button" class="btn btn-primary btn-lg" id="updateButton" 
+                    onclick="submitUpdate()" style="display: none;">
+                <i data-feather="save"></i>
+                Create New Version
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            feather.replace();
+        });
+
+        function deleteSelectedFiles() {
+            const checkboxes = document.querySelectorAll('.file-delete-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('Please select at least one file to delete');
+                return;
+            }
+
+            if (confirm('Are you sure you want to delete these files?')) {
+                filesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
+                
+                checkboxes.forEach(cb => {
+                    const item = document.getElementById(`file-item-${cb.value}`);
+                    if (item) {
+                        item.style.opacity = '0.5';
+                        item.style.textDecoration = 'line-through';
+                    }
+                });
+
+                document.getElementById('updateButton').style.display = 'block';
+            }
+        }
+
+        function submitUpdate() {
+            const datasetId = {{ dataset.id }};
+            
+            // Check if there are any changes
+            const hasDeletedFiles = filesToDelete.length > 0;
+            const hasNewFiles = uploadedFileCount > 0;
+            
+            if (!hasDeletedFiles && !hasNewFiles) {
+                alert('Please either delete files or upload new files');
+                return;
+            }
+
+            const changesSummary = [];
+            if (hasDeletedFiles) {
+                changesSummary.push(`${filesToDelete.length} file(s) will be deleted`);
+            }
+            if (hasNewFiles) {
+                changesSummary.push(`${uploadedFileCount} new file(s) will be added`);
+            }
+
+            const confirmMessage = `This will create a new version of the dataset:\n\n${changesSummary.join('\n')}\n\nContinue?`;
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            const updateButton = document.getElementById('updateButton');
+            updateButton.disabled = true;
+            updateButton.innerHTML = '<i data-feather="loader"></i> Creating version...';
+
+            // Prepare the request
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `/dataset/${datasetId}/update`, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    alert(`Dataset updated successfully!\nNew version: v${response.version}`);
+                    // Redirige a la lista de mis datasets (alternativa: /dataset/unsynchronized/${response.new_version_id}/)
+                    window.location.href = `/dataset/list`;
+                } else {
+                    const error = JSON.parse(xhr.responseText);
+                    alert(`Error: ${error.error || 'Unknown error'}`);
+                    updateButton.disabled = false;
+                    updateButton.innerHTML = '<i data-feather="save"></i> Create New Version';
+                }
+            };
+
+            xhr.onerror = function () {
+                alert('Error updating dataset');
+                updateButton.disabled = false;
+                updateButton.innerHTML = '<i data-feather="save"></i> Create New Version';
+            };
+
+            xhr.send(JSON.stringify({
+                files_to_delete: filesToDelete
+            }));
+        }
+    </script>
+
+{% endblock %}
