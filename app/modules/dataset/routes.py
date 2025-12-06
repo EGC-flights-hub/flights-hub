@@ -388,3 +388,25 @@ def validate_csv_file(file_id):
         return jsonify({"message": "Valid CSV file"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@dataset_bp.route("/dataset/<int:dataset_id>/compare", methods=["GET"])
+def compare_versions(dataset_id):
+    """
+    Compare the current dataset version with a specified version or the previous version by default.
+    """
+    dataset = dataset_service.get_by_id(dataset_id)
+    if not dataset:
+        return jsonify({"error": "Dataset not found"}), 404
+
+    compare_version_id = request.args.get("version_id", type=int)
+    compare_version = None
+
+    if compare_version_id:
+        compare_version = dataset_service.get_by_id(compare_version_id)
+        if not compare_version:
+            return jsonify({"error": "Version to compare not found"}), 404
+
+    comparison_result = dataset.compare_with_version(compare_version)
+
+    return jsonify(comparison_result), 200
