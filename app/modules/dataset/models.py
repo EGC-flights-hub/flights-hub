@@ -172,6 +172,13 @@ class DataSet(db.Model):
             current = current.previous_version
         return versions
 
+    def get_all_versions(self):
+        """Get all versions including this one, in chronological order (oldest to newest)"""
+        # Get all previous versions (oldest to newest, excluding current)
+        previous = self.get_all_previous_versions()
+        # Return previous versions + current version
+        return previous + [self]
+
     def compare_with_version(self, other_version=None):
         if other_version is None:
             other_version = self.previous_version
