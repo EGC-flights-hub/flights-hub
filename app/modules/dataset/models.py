@@ -98,9 +98,12 @@ class DataSet(db.Model):
 
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey("ds_meta_data.id"), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    version = db.Column(db.Integer, nullable=False, default=1)
+    previous_version_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), nullable=True)
 
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
     csv_files = db.relationship("CSVFile", backref="data_set", lazy=True, cascade="all, delete")
+    previous_version = db.relationship("DataSet", remote_side=[id], backref="next_version")
 
     def name(self):
         return self.ds_meta_data.title
@@ -158,6 +161,34 @@ class DataSet(db.Model):
 
     def __repr__(self):
         return f"DataSet<{self.id}>"
+
+    def compare_with_version(self, other_version=None):
+        if other_version is None:
+            other_version = self.previous_version
+
+        if not other_version:
+            return None
+
+        previous_files = {file.name: file for file in other_version.csv_files}
+        current_files = {file.name: file for file in self.csv_files}
+
+        added_files = [file.to_dict() for name, file in current_files.items() if name not in previous_files]
+        removed_files = [file.to_dict() for name, file in previous_files.items() if name not in current_files]
+        modified_files = [
+            {
+                "name": name,
+                "previous": previous_files[name].to_dict(),
+                "current": current_files[name].to_dict(),
+            }
+            for name in current_files.keys() & previous_files.keys()
+            if current_files[name].checksum != previous_files[name].checksum
+        ]
+
+        return {
+            "added": added_files,
+            "removed": removed_files,
+            "modified": modified_files,
+        }
 
 
 class DSDownloadRecord(db.Model):
