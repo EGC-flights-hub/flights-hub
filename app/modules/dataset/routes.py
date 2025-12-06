@@ -410,3 +410,27 @@ def compare_versions(dataset_id):
     comparison_result = dataset.compare_with_version(compare_version)
 
     return jsonify(comparison_result), 200
+
+
+@dataset_bp.route("/dataset/<int:dataset_id>/edit", methods=["GET"])
+@login_required
+def edit_dataset(dataset_id):
+    """
+    Edit a dataset - only the owner can edit it.
+    Allows uploading new files or deleting existing ones to create a new version.
+    """
+    dataset = dataset_service.get_by_id(dataset_id)
+    if not dataset:
+        abort(404)
+
+    # Only the owner can edit the dataset
+    if current_user.id != dataset.user_id:
+        abort(403)
+
+    form = DataSetForm()
+
+    return render_template(
+        "dataset/edit_dataset.html",
+        dataset=dataset,
+        form=form
+    )
