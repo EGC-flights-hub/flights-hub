@@ -86,6 +86,7 @@
                                     <th>Title</th>
                                     <th>Description</th>
                                     <th>Publication type</th>
+                                    <th>Version</th>
                                     <th>Options</th>
                                 </tr>
                                 </thead>
@@ -99,6 +100,7 @@
                                         </td>
                                         <td>{{ local_dataset.ds_meta_data.description }}</td>
                                         <td>{{ local_dataset.ds_meta_data.publication_type.name.replace('_', ' ').title() }}</td>
+                                        <td><span class="badge bg-info">v{{ local_dataset.version }}</span></td>
                                         <td>
                                             <a href="{{ url_for('dataset.get_unsynchronized_dataset', dataset_id=local_dataset.id) }}">
                                                 <i data-feather="eye"></i>
