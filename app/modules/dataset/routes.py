@@ -473,7 +473,7 @@ def edit_dataset(dataset_id):
 @login_required
 def update_dataset(dataset_id):
     """
-    Update a dataset by uploading new files or removing files.
+    Update a dataset by uploading new files, removing files, or updating metadata.
     Creates a new version and maintains previous version link.
     """
     dataset = dataset_service.get_by_id(dataset_id)
@@ -484,13 +484,14 @@ def update_dataset(dataset_id):
     if current_user.id != dataset.user_id:
         return jsonify({"error": "Unauthorized"}), 403
 
-    # Get the list of files to delete and files to add
+    # Get the list of files to delete and metadata changes
     data = request.get_json() or {}
     files_to_delete = data.get("files_to_delete", [])
+    metadata_changes = data.get("metadata", None)
 
     try:
-        # Create a new version as a copy of the current one
-        new_version = dataset_service.create_new_version(dataset, files_to_delete, current_user)
+        # Create a new version with optional metadata changes
+        new_version = dataset_service.create_new_version(dataset, files_to_delete, current_user, metadata_changes)
 
         # Move new CSV files from temp folder to the new version's directory
         dataset_service.move_csv_files(new_version)
