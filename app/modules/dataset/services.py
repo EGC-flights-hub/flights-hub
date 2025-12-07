@@ -62,7 +62,7 @@ class DataSetService(BaseService):
         # Add any remaining files in source_dir to the dataset
         if os.path.exists(source_dir):
             for filename in os.listdir(source_dir):
-                if filename.endswith('.csv'):
+                if filename.endswith(".csv"):
                     src_path = os.path.join(source_dir, filename)
                     dst_path = os.path.join(dest_dir, filename)
 
@@ -70,19 +70,11 @@ class DataSetService(BaseService):
                     shutil.move(src_path, dst_path)
 
                     # Create CSVFile entry if it doesn't exist
-                    existing = CSVFile.query.filter_by(
-                        name=filename,
-                        dataset_id=dataset.id
-                    ).first()
+                    existing = CSVFile.query.filter_by(name=filename, dataset_id=dataset.id).first()
 
                     if not existing:
                         checksum, size = calculate_checksum_and_size(dst_path)
-                        csv_file = CSVFile(
-                            name=filename,
-                            checksum=checksum,
-                            size=size,
-                            dataset_id=dataset.id
-                        )
+                        csv_file = CSVFile(name=filename, checksum=checksum, size=size, dataset_id=dataset.id)
                         self.repository.session.add(csv_file)
                         dataset.csv_files.append(csv_file)
 
@@ -244,7 +236,7 @@ class DataSetService(BaseService):
                 ds_metrics_id=dataset.ds_meta_data.ds_metrics_id,
                 deposition_id=dataset.ds_meta_data.deposition_id,
                 downloads=dataset.ds_meta_data.downloads,
-                commit=False
+                commit=False,
             )
 
             for author in dataset.ds_meta_data.authors:
@@ -253,7 +245,7 @@ class DataSetService(BaseService):
                     ds_meta_data_id=new_metadata.id,
                     name=author.name,
                     affiliation=author.affiliation,
-                    orcid=author.orcid
+                    orcid=author.orcid,
                 )
                 new_metadata.authors.append(new_author)
 
@@ -262,7 +254,7 @@ class DataSetService(BaseService):
                 user_id=current_user.id,
                 ds_meta_data_id=new_metadata.id,
                 version=dataset.version + 1,
-                previous_version_id=dataset.id
+                previous_version_id=dataset.id,
             )
 
             self.repository.session.commit()
@@ -284,10 +276,7 @@ class DataSetService(BaseService):
                         # Create new CSVFile entry
                         checksum, size = calculate_checksum_and_size(new_file_path)
                         new_csv_file = CSVFile(
-                            name=csv_file.name,
-                            checksum=checksum,
-                            size=size,
-                            dataset_id=new_dataset.id
+                            name=csv_file.name, checksum=checksum, size=size, dataset_id=new_dataset.id
                         )
                         new_dataset.csv_files.append(new_csv_file)
 
