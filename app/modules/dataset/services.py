@@ -385,3 +385,94 @@ class SizeService:
             return f"{round(size / (1024 ** 2), 2)} MB"
         else:
             return f"{round(size / (1024 ** 3), 2)} GB"
+
+
+class DiffService:
+    """Service for generating diffs between file versions"""
+
+    @staticmethod
+    def get_file_diff(previous_file_path: str, current_file_path: str):
+        """
+        Generate a detailed diff between two CSV files.
+        Returns structured diff data with operation types: added, removed, context.
+        """
+        import difflib
+
+        try:
+            with open(previous_file_path, "r", encoding="utf-8") as f:
+                previous_lines = f.readlines()
+        except Exception as e:
+            logger.error(f"Error reading previous file: {e}")
+            previous_lines = []
+
+        try:
+            with open(current_file_path, "r", encoding="utf-8") as f:
+                current_lines = f.readlines()
+        except Exception as e:
+            logger.error(f"Error reading current file: {e}")
+            current_lines = []
+
+        # Use difflib to generate a unified diff
+        differ = difflib.unified_diff(previous_lines, current_lines, lineterm="")
+        diff_lines = list(differ)
+
+        # Parse the diff output into structured format
+        diff_data = DiffService._parse_unified_diff(diff_lines, previous_lines, current_lines)
+
+        return {
+            "previous_lines": len(previous_lines),
+            "current_lines": len(current_lines),
+            "diff": diff_data,
+        }
+
+    @staticmethod
+    def _parse_unified_diff(diff_lines, previous_lines, current_lines):
+        """
+        Parse unified diff format into a more usable structure.
+        Returns a list with structured diff information.
+        """
+        result = []
+        prev_idx = 0
+        curr_idx = 0
+
+        # Skip the header lines
+        for line in diff_lines[2:]:
+            if line.startswith("@@"):
+                continue
+
+            if line.startswith("-"):
+                # Removed line
+                line_content = line[1:]
+                result.append(
+                    {
+                        "type": "removed",
+                        "line_number": prev_idx + 1,
+                        "content": line_content,
+                    }
+                )
+                prev_idx += 1
+            elif line.startswith("+"):
+                # Added line
+                line_content = line[1:]
+                result.append(
+                    {
+                        "type": "added",
+                        "line_number": curr_idx + 1,
+                        "content": line_content,
+                    }
+                )
+                curr_idx += 1
+            else:
+                # Context line (unchanged)
+                result.append(
+                    {
+                        "type": "context",
+                        "previous_line_number": prev_idx + 1,
+                        "current_line_number": curr_idx + 1,
+                        "content": line[1:] if line.startswith(" ") else line,
+                    }
+                )
+                prev_idx += 1
+                curr_idx += 1
+
+        return result
