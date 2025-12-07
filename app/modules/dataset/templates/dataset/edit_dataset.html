@@ -16,79 +16,137 @@
     </div>
 
     <div class="row">
-        <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
-            <div class="card">
-                <div class="card-body">
-                    <h3 class="card-title">Dataset Information</h3>
-                    
-                    <div class="mb-3">
-                        <label class="form-label"><b>Title:</b></label>
-                        <p class="form-control-plaintext">{{ dataset.ds_meta_data.title }}</p>
+        <div class="col-12">
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="metadata-tab" data-bs-toggle="tab" data-bs-target="#metadata" type="button" role="tab" aria-controls="metadata" aria-selected="true">
+                        <i data-feather="edit-2"></i> Edit Metadata
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" type="button" role="tab" aria-controls="files" aria-selected="false">
+                        <i data-feather="file"></i> Manage Files
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="tab-content">
+        <!-- Metadata Tab -->
+        <div class="tab-pane fade show active" id="metadata" role="tabpanel" aria-labelledby="metadata-tab">
+            <div class="row">
+                <div class="col-xl-8 col-lg-12 col-md-12 col-sm-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="card-title">Edit Dataset Metadata</h3>
+                            
+                            <form id="metadataForm">
+                                <div class="mb-3">
+                                    <label class="form-label"><b>Title:</b></label>
+                                    <input type="text" class="form-control" id="titleInput" value="{{ dataset.ds_meta_data.title }}">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label"><b>Description:</b></label>
+                                    <textarea class="form-control" id="descriptionInput" rows="4">{{ dataset.ds_meta_data.description }}</textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label"><b>Publication Type:</b></label>
+                                            <select class="form-select" id="publicationTypeInput">
+                                                <option value="">-- Select publication type --</option>
+                                                {% for pt in form.publication_type.choices %}
+                                                    <option value="{{ pt[0] }}" {% if pt[0] == dataset.ds_meta_data.publication_type.value %}selected{% endif %}>
+                                                        {{ pt[1] }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label"><b>Publication DOI:</b></label>
+                                            <input type="text" class="form-control" id="publicationDoiInput" value="{{ dataset.ds_meta_data.publication_doi or '' }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label"><b>Tags (separated by commas):</b></label>
+                                    <input type="text" class="form-control" id="tagsInput" value="{{ dataset.ds_meta_data.tags or '' }}">
+                                </div>
+
+                                <hr>
+
+                                <div class="mb-3">
+                                    <label class="form-label"><b>Current Version:</b></label>
+                                    <p class="form-control-plaintext">{{ dataset.version }}</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label"><b>Created:</b></label>
+                                    <p class="form-control-plaintext">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                </div>
+
+                                <hr>
+
+                                <h5 class="mb-3">
+                                    <i data-feather="info"></i>
+                                    Note about editing
+                                </h5>
+                                <p class="text-muted">
+                                    When you edit the metadata, a new version will be created with your changes. 
+                                    The previous version will be preserved and users will be able to compare the differences 
+                                    between versions on the dataset page. Files remain the same unless you also manage them in the Files tab.
+                                </p>
+                            </form>
+                        </div>
                     </div>
-
-                    <div class="mb-3">
-                        <label class="form-label"><b>Description:</b></label>
-                        <p class="form-control-plaintext">{{ dataset.ds_meta_data.description }}</p>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label"><b>Current Version:</b></label>
-                        <p class="form-control-plaintext">{{ dataset.version }}</p>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label"><b>Created:</b></label>
-                        <p class="form-control-plaintext">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
-                    </div>
-
-                    <hr>
-
-                    <h5 class="mb-3">
-                        <i data-feather="info"></i>
-                        Note about editing
-                    </h5>
-                    <p class="text-muted">
-                        When you edit this dataset, a new version will be created with your changes. 
-                        The previous version will be preserved and users will be able to compare the differences 
-                        between versions on the dataset page.
-                    </p>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
-            <div class="card">
-                <div class="card-body">
-                    <h3 class="card-title">Current Files</h3>
-                    
-                    <div id="currentFilesList" class="list-group mt-3">
-                        {% for file in dataset.csv_files %}
-                        <div class="list-group-item" id="file-item-{{ file.id }}">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    <input type="checkbox" class="form-check-input file-delete-checkbox" 
-                                           value="{{ file.id }}" data-file-name="{{ file.name }}">
-                                </div>
-                                <div class="col">
-                                    <div>
-                                        <i data-feather="file"></i>
-                                        <strong>{{ file.name }}</strong>
+        <!-- Files Tab -->
+        <div class="tab-pane fade" id="files" role="tabpanel" aria-labelledby="files-tab">
+            <div class="row">
+                <div class="col-xl-8 col-lg-12 col-md-12 col-sm-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="card-title">Current Files</h3>
+                            
+                            <div id="currentFilesList" class="list-group mt-3">
+                                {% for file in dataset.csv_files %}
+                                <div class="list-group-item" id="file-item-{{ file.id }}">
+                                    <div class="row align-items-center">
+                                        <div class="col-auto">
+                                            <input type="checkbox" class="form-check-input file-delete-checkbox" 
+                                                   value="{{ file.id }}" data-file-name="{{ file.name }}">
+                                        </div>
+                                        <div class="col">
+                                            <div>
+                                                <i data-feather="file"></i>
+                                                <strong>{{ file.name }}</strong>
+                                            </div>
+                                            <small class="text-muted">({{ file.get_formatted_size() }})</small>
+                                        </div>
                                     </div>
-                                    <small class="text-muted">({{ file.get_formatted_size() }})</small>
                                 </div>
+                                {% endfor %}
                             </div>
-                        </div>
-                        {% endfor %}
-                    </div>
 
-                    {% if dataset.csv_files %}
-                    <div class="mt-3">
-                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteSelectedFiles()">
-                            <i data-feather="trash-2"></i>
-                            Delete Selected Files
-                        </button>
+                            {% if dataset.csv_files %}
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="deleteSelectedFiles()">
+                                    <i data-feather="trash-2"></i>
+                                    Delete Selected Files
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
@@ -210,7 +268,48 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             feather.replace();
+            
+            // Listen for metadata changes
+            document.getElementById('titleInput').addEventListener('input', checkForChanges);
+            document.getElementById('descriptionInput').addEventListener('input', checkForChanges);
+            document.getElementById('publicationTypeInput').addEventListener('change', checkForChanges);
+            document.getElementById('publicationDoiInput').addEventListener('input', checkForChanges);
+            document.getElementById('tagsInput').addEventListener('input', checkForChanges);
         });
+
+        function checkForChanges() {
+            const hasDeletedFiles = filesToDelete.length > 0;
+            const hasNewFiles = uploadedFileCount > 0;
+            const hasMetadataChanges = hasMetadataChanged();
+            
+            if (hasDeletedFiles || hasNewFiles || hasMetadataChanges) {
+                document.getElementById('updateButton').style.display = 'block';
+            } else {
+                document.getElementById('updateButton').style.display = 'none';
+            }
+        }
+
+        function hasMetadataChanged() {
+            const currentTitle = document.getElementById('titleInput').value;
+            const currentDescription = document.getElementById('descriptionInput').value;
+            const currentPublicationType = document.getElementById('publicationTypeInput').value;
+            const currentPublicationDoi = document.getElementById('publicationDoiInput').value;
+            const currentTags = document.getElementById('tagsInput').value;
+
+            const originalTitle = '{{ dataset.ds_meta_data.title }}';
+            const originalDescription = '{{ dataset.ds_meta_data.description }}';
+            const originalPublicationType = '{{ dataset.ds_meta_data.publication_type.value }}';
+            const originalPublicationDoi = '{{ dataset.ds_meta_data.publication_doi or '' }}';
+            const originalTags = '{{ dataset.ds_meta_data.tags or '' }}';
+
+            return (
+                currentTitle !== originalTitle ||
+                currentDescription !== originalDescription ||
+                currentPublicationType !== originalPublicationType ||
+                currentPublicationDoi !== originalPublicationDoi ||
+                currentTags !== originalTags
+            );
+        }
 
         function deleteSelectedFiles() {
             const checkboxes = document.querySelectorAll('.file-delete-checkbox:checked');
@@ -230,23 +329,36 @@
                     }
                 });
 
-                document.getElementById('updateButton').style.display = 'block';
+                checkForChanges();
             }
         }
 
         function submitUpdate() {
             const datasetId = {{ dataset.id }};
             
+            // Collect metadata changes
+            const metadataChanges = {
+                title: document.getElementById('titleInput').value,
+                description: document.getElementById('descriptionInput').value,
+                publication_type: document.getElementById('publicationTypeInput').value,
+                publication_doi: document.getElementById('publicationDoiInput').value,
+                tags: document.getElementById('tagsInput').value,
+            };
+            
             // Check if there are any changes
             const hasDeletedFiles = filesToDelete.length > 0;
             const hasNewFiles = uploadedFileCount > 0;
+            const hasMetadataChanges = hasMetadataChanged();
             
-            if (!hasDeletedFiles && !hasNewFiles) {
-                alert('Please either delete files or upload new files');
+            if (!hasDeletedFiles && !hasNewFiles && !hasMetadataChanges) {
+                alert('Please make at least one change');
                 return;
             }
 
             const changesSummary = [];
+            if (hasMetadataChanges) {
+                changesSummary.push('Metadata will be updated');
+            }
             if (hasDeletedFiles) {
                 changesSummary.push(`${filesToDelete.length} file(s) will be deleted`);
             }
@@ -272,7 +384,6 @@
                 if (xhr.status === 200) {
                     const response = JSON.parse(xhr.responseText);
                     alert(`Dataset updated successfully!\nNew version: v${response.version}`);
-                    // Redirige a la lista de mis datasets (alternativa: /dataset/unsynchronized/${response.new_version_id}/)
                     window.location.href = `/dataset/list`;
                 } else {
                     const error = JSON.parse(xhr.responseText);
@@ -289,7 +400,8 @@
             };
 
             xhr.send(JSON.stringify({
-                files_to_delete: filesToDelete
+                files_to_delete: filesToDelete,
+                metadata: metadataChanges
             }));
         }
     </script>
