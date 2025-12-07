@@ -186,7 +186,7 @@ def delete():
 @dataset_bp.route("/dataset/download/<int:dataset_id>/<int:version_id>", methods=["GET"])
 def download_dataset(dataset_id, version_id=None):
     dataset = dataset_service.get_or_404(dataset_id)
-    
+
     # If a specific version is requested, use that; otherwise use the current dataset
     if version_id is not None:
         download_dataset_obj = dataset_service.get_or_404(version_id)
