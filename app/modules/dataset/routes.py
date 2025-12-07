@@ -433,6 +433,27 @@ def compare_versions(dataset_id):
     return jsonify(comparison_result), 200
 
 
+@dataset_bp.route("/dataset/<int:dataset_id>/compare_metadata", methods=["GET"])
+def compare_metadata_versions(dataset_id):
+    """
+    Compare the current dataset version's metadata with a specified version or the previous version by default.
+    """
+    dataset = dataset_service.get_by_id(dataset_id)
+    if not dataset:
+        return jsonify({"error": "Dataset not found"}), 404
+
+    compare_version_id = request.args.get("version_id", type=int)
+    compare_version = None
+
+    if compare_version_id:
+        compare_version = dataset_service.get_by_id(compare_version_id)
+        if not compare_version:
+            return jsonify({"error": "Version to compare not found"}), 404
+
+    comparison_result = dataset.compare_metadata_with_version(compare_version)
+    return jsonify(comparison_result), 200
+
+
 @dataset_bp.route("/dataset/<int:dataset_id>/edit", methods=["GET"])
 @login_required
 def edit_dataset(dataset_id):
