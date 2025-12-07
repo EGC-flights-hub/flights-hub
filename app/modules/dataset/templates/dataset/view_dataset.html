@@ -702,9 +702,9 @@
                 resultsDiv.innerHTML = html;
                 feather.replace();
             })
-            .catch((error) => { 
+            .catch((error) => {
                 resultsDiv.innerHTML = `<div class="alert alert-danger">Error loading metadata comparison: ${error.message}</div>`;
-                console.error("Error en la comparación de metadatos:", error); 
+                console.error("Error en la comparación de metadatos:", error);
             });
     }
 
