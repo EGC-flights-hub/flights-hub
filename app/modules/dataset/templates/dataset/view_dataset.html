@@ -304,7 +304,12 @@
             {% if dataset.version > 1 %}
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="versions-tab" data-bs-toggle="tab" data-bs-target="#versions" type="button" role="tab" aria-controls="versions" aria-selected="false">
-                    Versions
+                    Compare Files
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="metadata-tab" data-bs-toggle="tab" data-bs-target="#metadata" type="button" role="tab" aria-controls="metadata" aria-selected="false">
+                    Compare Metadata
                 </button>
             </li>
             {% endif %}
@@ -379,7 +384,7 @@
                     <div class="list-group-item">
                         <div class="row">
                             <div class="col-12">
-                                <label for="compareVersionSelect" class="form-label"><b>Compare with version:</b></label>
+                                <label for="compareVersionSelect" class="form-label"><b>Compare files with version:</b></label>
                                 <select id="compareVersionSelect" class="form-select" onchange="loadFileVersionComparison()">
                                     <option value="">-- Select version --</option>
                                     {% for version in dataset.get_all_previous_versions() %}
@@ -392,6 +397,27 @@
                 </div>
 
                 <div id="comparisonResults" class="mt-3"></div>
+            </div>
+
+            <!-- Metadata Tab -->
+            <div class="tab-pane fade" id="metadata" role="tabpanel" aria-labelledby="metadata-tab">
+                <div class="list-group mt-3">
+                    <div class="list-group-item">
+                        <div class="row">
+                            <div class="col-12">
+                                <label for="compareMetadataVersionSelect" class="form-label"><b>Compare metadata with version:</b></label>
+                                <select id="compareMetadataVersionSelect" class="form-select" onchange="loadMetadataVersionComparison()">
+                                    <option value="">-- Select version --</option>
+                                    {% for version in dataset.get_all_previous_versions() %}
+                                    <option value="{{ version.id }}">v{{ version.version }} ({{ version.created_at.strftime('%B %d, %Y') }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="metadataComparisonResults" class="mt-3"></div>
             </div>
             {% endif %}
         </div>
@@ -636,6 +662,49 @@
             .catch((error) => { 
                 resultsDiv.innerHTML = `<div class="alert alert-danger">Error loading comparison: ${error.message}</div>`;
                 console.error("Error en la comparación:", error); 
+            });
+    }
+
+    function loadMetadataVersionComparison() {
+        const compareVersionId = document.getElementById('compareMetadataVersionSelect').value;
+        const resultsDiv = document.getElementById('metadataComparisonResults');
+        const datasetId = {{ dataset.id }};
+
+        if (!compareVersionId) {
+            resultsDiv.innerHTML = '';
+            return;
+        }
+
+        fetch(`/dataset/${datasetId}/compare_metadata?version_id=${compareVersionId}`)
+            .then(response => {
+                if (!response.ok) throw new Error("Network response was not ok");
+                return response.json();
+            })
+            .then(data => {
+                // Check if there are any changes
+                if (!data || Object.keys(data).length === 0) {
+                    resultsDiv.innerHTML = '<div class="alert alert-info"><i data-feather="info"></i> No changes between versions</div>';
+                    feather.replace();
+                    return;
+                }
+
+                // Process and display metadata comparison results
+                let html = '<div class="card"><div class="card-body">';
+
+                for (const [field, changes] of Object.entries(data)) {
+                    html += `<h6 class="text-warning"><i data-feather="edit-2"></i> ${field.charAt(0).toUpperCase() + field.slice(1)}</h6>`;
+                    html += `<p><strong>Previous:</strong> ${changes.previous || 'N/A'}</p>`;
+                    html += `<p><strong>Current:</strong> ${changes.current || 'N/A'}</p>`;
+                    html += '<hr>';
+                }
+
+                html += '</div></div>';
+                resultsDiv.innerHTML = html;
+                feather.replace();
+            })
+            .catch((error) => { 
+                resultsDiv.innerHTML = `<div class="alert alert-danger">Error loading metadata comparison: ${error.message}</div>`;
+                console.error("Error en la comparación de metadatos:", error); 
             });
     }
 
