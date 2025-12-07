@@ -380,7 +380,7 @@
                         <div class="row">
                             <div class="col-12">
                                 <label for="compareVersionSelect" class="form-label"><b>Compare with version:</b></label>
-                                <select id="compareVersionSelect" class="form-select" onchange="loadVersionComparison()">
+                                <select id="compareVersionSelect" class="form-select" onchange="loadFileVersionComparison()">
                                     <option value="">-- Select version --</option>
                                     {% for version in dataset.get_all_previous_versions() %}
                                     <option value="{{ version.id }}">v{{ version.version }} ({{ version.created_at.strftime('%B %d, %Y') }})</option>
@@ -561,7 +561,7 @@
             .catch((error) => { console.error("Error en la petición del badge:", error); }); 
     }
 
-    function loadVersionComparison() {
+    function loadFileVersionComparison() {
         const compareVersionId = document.getElementById('compareVersionSelect').value;
         const resultsDiv = document.getElementById('comparisonResults');
         const datasetId = {{ dataset.id }};
