@@ -449,6 +449,58 @@ def compare_metadata_versions(dataset_id):
     return jsonify(comparison_result), 200
 
 
+@dataset_bp.route("/dataset/<int:dataset_id>/compare/diff/<file_name>", methods=["GET"])
+def get_file_diff(dataset_id, file_name):
+    """
+    Get a detailed diff of a specific file between two versions.
+    Query parameter: version_id (optional) - the version to compare with
+    """
+    from app.modules.dataset.models import CSVFile
+    from app.modules.dataset.services import DiffService
+
+    dataset = dataset_service.get_by_id(dataset_id)
+    if not dataset:
+        return jsonify({"error": "Dataset not found"}), 404
+
+    compare_version_id = request.args.get("version_id", type=int)
+    compare_version = dataset.previous_version
+
+    if compare_version_id:
+        compare_version = dataset_service.get_by_id(compare_version_id)
+        if not compare_version:
+            return jsonify({"error": "Version to compare not found"}), 404
+
+    if not compare_version:
+        return jsonify({"error": "No previous version to compare"}), 404
+
+    # Find the file in both versions
+    current_file = CSVFile.query.filter_by(name=file_name, dataset_id=dataset.id).first()
+    previous_file = CSVFile.query.filter_by(name=file_name, dataset_id=compare_version.id).first()
+
+    if not current_file or not previous_file:
+        return jsonify({"error": "File not found in one or both versions"}), 404
+
+    # Get file paths
+    working_dir = os.getenv("WORKING_DIR", "")
+    current_path = os.path.join(
+        working_dir, "uploads", f"user_{dataset.user_id}", f"dataset_{dataset.id}", file_name
+    )
+    previous_path = os.path.join(
+        working_dir,
+        "uploads",
+        f"user_{compare_version.user_id}",
+        f"dataset_{compare_version.id}",
+        file_name,
+    )
+
+    try:
+        diff_result = DiffService.get_file_diff(previous_path, current_path)
+        return jsonify(diff_result), 200
+    except Exception as e:
+        logger.exception(f"Error generating diff for file {file_name}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 @dataset_bp.route("/dataset/<int:dataset_id>/edit", methods=["GET"])
 @login_required
 def edit_dataset(dataset_id):
