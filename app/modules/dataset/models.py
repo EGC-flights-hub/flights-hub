@@ -221,9 +221,19 @@ class DataSet(db.Model):
             current_value = getattr(self.ds_meta_data, field)
             previous_value = getattr(other_version.ds_meta_data, field)
             if current_value != previous_value:
+                if isinstance(current_value, PublicationType):
+                    current_serialized = current_value.value
+                else:
+                    current_serialized = current_value
+
+                if isinstance(previous_value, PublicationType):
+                    previous_serialized = previous_value.value
+                else:
+                    previous_serialized = previous_value
+
                 changes[field] = {
-                    "previous": previous_value,
-                    "current": current_value,
+                    "previous": previous_serialized,
+                    "current": current_serialized,
                 }
 
         return changes
