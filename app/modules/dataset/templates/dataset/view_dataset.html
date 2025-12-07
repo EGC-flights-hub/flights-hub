@@ -486,9 +486,116 @@
     </div>
 </div>
 
+<!-- File Diff Modal -->
+<div class="modal fade" id="fileDiffModal" tabindex="-1" aria-labelledby="fileDiffModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-height: 90vh; display: flex; align-items: center;">
+        <div class="modal-content" style="max-height: 90vh;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 class="modal-title" id="fileDiffModalLabel">File Changes - <span id="diffFileName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="overflow-y: auto; height: calc(90vh - 120px);">
+                <div id="diffContainer" class="diff-container">
+                    <!-- Diff content will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script type="text/javascript" src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
 
+<style>
+    .diff-container {
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        background-color: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
 
+    .diff-line {
+        display: flex;
+        border-bottom: 1px solid #eee;
+    }
+
+    .diff-line-number {
+        color: #999;
+        padding: 0 10px;
+        text-align: right;
+        user-select: none;
+        background-color: #f5f5f5;
+        min-width: 50px;
+        flex-shrink: 0;
+    }
+
+    .diff-line-content {
+        padding: 0 10px;
+        flex-grow: 1;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        background-color: #fff;
+    }
+
+    .diff-line.added {
+        background-color: #e6f7e6;
+    }
+
+    .diff-line.added .diff-line-content {
+        background-color: #e6f7e6;
+    }
+
+    .diff-line.added .diff-line-number {
+        background-color: #d4edda;
+    }
+
+    .diff-line.removed {
+        background-color: #ffe6e6;
+    }
+
+    .diff-line.removed .diff-line-content {
+        background-color: #ffe6e6;
+    }
+
+    .diff-line.removed .diff-line-number {
+        background-color: #f8d7da;
+    }
+
+    .diff-line.context {
+        background-color: #f8f8f8;
+    }
+
+    .diff-line.context .diff-line-content {
+        background-color: #fff;
+    }
+
+    .diff-stats {
+        margin-bottom: 15px;
+        padding: 10px;
+        background-color: #f5f5f5;
+        border-radius: 4px;
+        border-left: 4px solid #007bff;
+    }
+
+    .diff-stats span {
+        margin-right: 20px;
+        font-weight: 500;
+    }
+
+    .text-added {
+        color: #28a745;
+    }
+
+    .text-removed {
+        color: #dc3545;
+    }
+
+    .text-info-diff {
+        color: #17a2b8;
+    }
+</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -508,6 +615,77 @@
                 modal.show();
             })
             .catch(error => console.error('Error loading file:', error));
+    }
+
+    function viewFileDiff(fileName, displayName, compareVersionId) {
+        const datasetId = {{ dataset.id }};
+        const diffContainer = document.getElementById('diffContainer');
+        document.getElementById('diffFileName').textContent = displayName || fileName;
+        
+        diffContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+        
+        const url = `/dataset/${datasetId}/compare/diff/${fileName}?version_id=${compareVersionId}`;
+        
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error("Network response was not ok");
+                return response.json();
+            })
+            .then(data => {
+                if (!data || !data.diff || data.diff.length === 0) {
+                    diffContainer.innerHTML = '<div class="alert alert-info">No changes in this file</div>';
+                    feather.replace();
+                    return;
+                }
+                
+                let html = '<div class="diff-stats">';
+                html += `<span class="text-added"><strong>+${data.current_lines}</strong> lines</span>`;
+                html += `<span class="text-removed"><strong>-${data.previous_lines}</strong> lines</span>`;
+                html += '</div>';
+                
+                html += '<div class="diff-container">';
+                
+                data.diff.forEach(line => {
+                    if (line.type === 'added') {
+                        html += '<div class="diff-line added">';
+                        html += `<div class="diff-line-number">+${line.line_number}</div>`;
+                        html += `<div class="diff-line-content">${escapeHtml(line.content)}</div>`;
+                        html += '</div>';
+                    } else if (line.type === 'removed') {
+                        html += '<div class="diff-line removed">';
+                        html += `<div class="diff-line-number">-${line.line_number}</div>`;
+                        html += `<div class="diff-line-content">${escapeHtml(line.content)}</div>`;
+                        html += '</div>';
+                    } else if (line.type === 'context') {
+                        html += '<div class="diff-line context">';
+                        html += `<div class="diff-line-number">${line.previous_line_number}</div>`;
+                        html += `<div class="diff-line-content">${escapeHtml(line.content)}</div>`;
+                        html += '</div>';
+                    }
+                });
+                
+                html += '</div>';
+                diffContainer.innerHTML = html;
+                feather.replace();
+            })
+            .catch((error) => {
+                diffContainer.innerHTML = `<div class="alert alert-danger">Error loading diff: ${error.message}</div>`;
+                console.error("Error en la comparación de archivos:", error);
+            });
+        
+        var modal = new bootstrap.Modal(document.getElementById('fileDiffModal'));
+        modal.show();
+    }
+
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
     }
 
     function showLoading() {
@@ -650,7 +828,9 @@
                     data.modified.forEach(file => {
                         html += `<li><code>${file.name}</code>`;
                         html += `<br><small class="text-muted">Previous: ${file.previous.size_in_human_format}</small>`;
-                        html += `<br><small class="text-muted">Current: ${file.current.size_in_human_format}</small></li>`;
+                        html += `<br><small class="text-muted">Current: ${file.current.size_in_human_format}</small>`;
+                        html += `<br><button class="btn btn-sm btn-outline-info mt-2" onclick="viewFileDiff('${file.name}', '${file.current.name}', ${document.getElementById('compareVersionSelect').value})">`;
+                        html += `<i data-feather="eye"></i> View Changes</button></li>`;
                     });
                     html += '</ul>';
                 }
