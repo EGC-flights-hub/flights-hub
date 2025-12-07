@@ -232,9 +232,7 @@ class DataSetService(BaseService):
             metadata_values = {
                 "title": metadata_changes.get("title") if metadata_changes else dataset.ds_meta_data.title,
                 "description": (
-                    metadata_changes.get("description")
-                    if metadata_changes
-                    else dataset.ds_meta_data.description
+                    metadata_changes.get("description") if metadata_changes else dataset.ds_meta_data.description
                 ),
                 "publication_type": (
                     self._convert_publication_type(metadata_changes.get("publication_type"))
@@ -247,9 +245,7 @@ class DataSetService(BaseService):
                     else dataset.ds_meta_data.publication_doi
                 ),
                 "dataset_doi": dataset.ds_meta_data.dataset_doi,
-                "tags": (
-                    metadata_changes.get("tags") if metadata_changes else dataset.ds_meta_data.tags
-                ),
+                "tags": (metadata_changes.get("tags") if metadata_changes else dataset.ds_meta_data.tags),
                 "ds_metrics_id": dataset.ds_meta_data.ds_metrics_id,
                 "deposition_id": dataset.ds_meta_data.deposition_id,
                 "downloads": dataset.ds_meta_data.downloads,
