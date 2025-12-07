@@ -224,20 +224,39 @@ class DataSetService(BaseService):
 
         return [item["dataset"] for item in candidates[:4]]
 
-    def create_new_version(self, dataset: DataSet, files_to_delete: list, current_user) -> DataSet:
+    def create_new_version(
+        self, dataset: DataSet, files_to_delete: list, current_user, metadata_changes: dict = None
+    ) -> DataSet:
         try:
-            new_metadata = self.dsmetadata_repository.create(
-                title=dataset.ds_meta_data.title,
-                description=dataset.ds_meta_data.description,
-                publication_type=dataset.ds_meta_data.publication_type,
-                publication_doi=dataset.ds_meta_data.publication_doi,
-                dataset_doi=dataset.ds_meta_data.dataset_doi,
-                tags=dataset.ds_meta_data.tags,
-                ds_metrics_id=dataset.ds_meta_data.ds_metrics_id,
-                deposition_id=dataset.ds_meta_data.deposition_id,
-                downloads=dataset.ds_meta_data.downloads,
-                commit=False,
-            )
+            # Prepare metadata values - use updated values if provided, otherwise keep original
+            metadata_values = {
+                "title": metadata_changes.get("title") if metadata_changes else dataset.ds_meta_data.title,
+                "description": (
+                    metadata_changes.get("description")
+                    if metadata_changes
+                    else dataset.ds_meta_data.description
+                ),
+                "publication_type": (
+                    self._convert_publication_type(metadata_changes.get("publication_type"))
+                    if metadata_changes and metadata_changes.get("publication_type")
+                    else dataset.ds_meta_data.publication_type
+                ),
+                "publication_doi": (
+                    metadata_changes.get("publication_doi")
+                    if metadata_changes
+                    else dataset.ds_meta_data.publication_doi
+                ),
+                "dataset_doi": dataset.ds_meta_data.dataset_doi,
+                "tags": (
+                    metadata_changes.get("tags") if metadata_changes else dataset.ds_meta_data.tags
+                ),
+                "ds_metrics_id": dataset.ds_meta_data.ds_metrics_id,
+                "deposition_id": dataset.ds_meta_data.deposition_id,
+                "downloads": dataset.ds_meta_data.downloads,
+                "commit": False,
+            }
+
+            new_metadata = self.dsmetadata_repository.create(**metadata_values)
 
             for author in dataset.ds_meta_data.authors:
                 new_author = self.author_repository.create(
@@ -288,6 +307,15 @@ class DataSetService(BaseService):
             logger.exception(f"Exception creating new dataset version: {exc}")
             self.repository.session.rollback()
             raise exc
+
+    def _convert_publication_type(self, value: str):
+        """Convert publication type string to enum"""
+        from app.modules.dataset.models import PublicationType
+
+        for pt in PublicationType:
+            if pt.value == value:
+                return pt
+        return PublicationType.NONE
 
 
 class AuthorService(BaseService):
