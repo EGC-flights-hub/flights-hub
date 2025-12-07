@@ -207,6 +207,27 @@ class DataSet(db.Model):
             "modified": modified_files,
         }
 
+    def compare_metadata_with_version(self, other_version=None):
+        if other_version is None:
+            other_version = self.previous_version
+
+        if not other_version:
+            return None
+
+        changes = {}
+        fields_to_compare = ["title", "description", "publication_type", "publication_doi", "tags"]
+
+        for field in fields_to_compare:
+            current_value = getattr(self.ds_meta_data, field)
+            previous_value = getattr(other_version.ds_meta_data, field)
+            if current_value != previous_value:
+                changes[field] = {
+                    "previous": previous_value,
+                    "current": current_value,
+                }
+
+        return changes
+
 
 class DSDownloadRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
