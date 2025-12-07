@@ -295,10 +295,7 @@ def get_unsynchronized_dataset(dataset_id):
     else:
         # Allow anonymous users to view unsynchronized datasets
         dataset = (
-            DataSet.query.filter_by(id=dataset_id)
-            .join(DSMetaData)
-            .filter(DSMetaData.dataset_doi.is_(None))
-            .first()
+            DataSet.query.filter_by(id=dataset_id).join(DSMetaData).filter(DSMetaData.dataset_doi.is_(None)).first()
         )
 
     if not dataset:
@@ -306,9 +303,7 @@ def get_unsynchronized_dataset(dataset_id):
 
     related_datasets = dataset_service.get_related_datasets(dataset.id)
 
-    return render_template(
-        "dataset/view_dataset.html", dataset=dataset, related_datasets=related_datasets
-    )
+    return render_template("dataset/view_dataset.html", dataset=dataset, related_datasets=related_datasets)
 
 
 @dataset_bp.route("/dataset/<int:dataset_id>/badge/md", methods=["GET"])
@@ -471,11 +466,7 @@ def edit_dataset(dataset_id):
 
     form = DataSetForm()
 
-    return render_template(
-        "dataset/edit_dataset.html",
-        dataset=dataset,
-        form=form
-    )
+    return render_template("dataset/edit_dataset.html", dataset=dataset, form=form)
 
 
 @dataset_bp.route("/dataset/<int:dataset_id>/update", methods=["POST"])
@@ -499,20 +490,21 @@ def update_dataset(dataset_id):
 
     try:
         # Create a new version as a copy of the current one
-        new_version = dataset_service.create_new_version(
-            dataset,
-            files_to_delete,
-            current_user
-        )
+        new_version = dataset_service.create_new_version(dataset, files_to_delete, current_user)
 
         # Move new CSV files from temp folder to the new version's directory
         dataset_service.move_csv_files(new_version)
 
-        return jsonify({
-            "message": "Dataset updated successfully",
-            "new_version_id": new_version.id,
-            "version": new_version.version
-        }), 200
+        return (
+            jsonify(
+                {
+                    "message": "Dataset updated successfully",
+                    "new_version_id": new_version.id,
+                    "version": new_version.version,
+                }
+            ),
+            200,
+        )
     except Exception as e:
         logger.exception(f"Exception updating dataset: {e}")
         return jsonify({"error": str(e)}), 500
