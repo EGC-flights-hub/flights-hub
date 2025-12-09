@@ -1,8 +1,10 @@
+import io
 import re
 import uuid
 
 import pytest
 
+from app.modules.conftest import login
 from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData, DSViewRecord
 
 
@@ -131,3 +133,91 @@ def get_downloads_from_html(html):
     match = re.search(patron, html, re.IGNORECASE)
     downloads_value = int(match.group(1))
     return downloads_value
+
+
+def test_list_dataset_without_login(test_client):
+    response = test_client.get("/dataset/list")
+    assert response.status_code == 302
+
+
+def test_list_dataset(test_client):
+    login_response = login(test_client, "test@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    response = test_client.get("/dataset/list")
+    assert response.status_code == 200
+    assert b"My datasets" in response.data
+
+
+def test_get_dataset_upload(test_client):
+    login_response = login(test_client, "test@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    response = test_client.get("/dataset/upload")
+    assert response.status_code == 200
+    assert b"Upload" in response.data
+
+
+def make_upload_file(filename, content: bytes):
+    return (io.BytesIO(content), filename)
+
+
+def test_dataset_file_upload_and_delete(test_client):
+    login_response = login(test_client, "test@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    data = {"file": (io.BytesIO(b"a,b\n1,2\n"), "not_csv.txt")}
+    resp = test_client.post("/dataset/file/upload", data=data, content_type="multipart/form-data")
+    assert resp.status_code == 400
+
+    data = {"file": (io.BytesIO(b"col1,col2\n1,2\n"), "test_upload.csv")}
+    resp = test_client.post("/dataset/file/upload", data=data, content_type="multipart/form-data")
+    assert resp.status_code == 200
+    json_data = resp.get_json()
+    assert "filename" in json_data
+    filename = json_data["filename"]
+
+    resp2 = test_client.post("/dataset/file/delete", json={"file": filename})
+    assert resp2.status_code == 200
+    assert resp2.get_json().get("message") == "File deleted successfully"
+
+
+def test_dataset_create(test_client, monkeypatch):
+    def mock_create_new_deposition(dataset):
+        return {}
+
+    from app.modules.zenodo import services as zenodo_services
+
+    monkeypatch.setattr(zenodo_services.ZenodoService, "create_new_deposition", mock_create_new_deposition)
+
+    login_response = login(test_client, "test@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    csv_content = b"col1,col2,col3\n1,2,3\n4,5,6\n"
+    csv_filename = f"dataset_{uuid.uuid4().hex[:8]}.csv"
+
+    upload_response = test_client.post(
+        "/dataset/file/upload",
+        data={"file": (io.BytesIO(csv_content), csv_filename)},
+        content_type="multipart/form-data",
+    )
+    assert upload_response.status_code == 200
+    uploaded_filename = upload_response.get_json()["filename"]
+
+    dataset_data = {
+        "title": "Test Dataset Creation",
+        "desc": "Testing dataset creation",
+        "publication_type": "other",
+        "tags": "test,dataset",
+        "authors-0-name": "Test Author",
+        "csv_files-0-csv_filename": uploaded_filename,
+    }
+
+    resp = test_client.post("/dataset/upload", data=dataset_data)
+    assert resp.status_code == 200
+
+    with test_client.application.app_context():
+        dataset = DataSet.query.filter_by(user_id=1).order_by(DataSet.id.desc()).first()
+        assert dataset is not None
+        assert dataset.ds_meta_data.title == "Test Dataset Creation"
+        assert dataset.ds_meta_data.description == "Testing dataset creation"
