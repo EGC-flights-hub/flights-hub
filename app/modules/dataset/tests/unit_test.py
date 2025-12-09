@@ -1,7 +1,7 @@
 import io
 import re
 import uuid
-from app import db
+
 import pytest
 
 from app.modules.conftest import login
@@ -181,23 +181,25 @@ def test_dataset_file_upload_and_delete(test_client):
     assert resp2.status_code == 200
     assert resp2.get_json().get("message") == "File deleted successfully"
 
+
 def test_dataset_create(test_client, monkeypatch):
     def mock_create_new_deposition(dataset):
         return {}
-    
+
     from app.modules.zenodo import services as zenodo_services
+
     monkeypatch.setattr(zenodo_services.ZenodoService, "create_new_deposition", mock_create_new_deposition)
-    
+
     login_response = login(test_client, "test@example.com", "test1234")
     assert login_response.status_code == 200
 
     csv_content = b"col1,col2,col3\n1,2,3\n4,5,6\n"
     csv_filename = f"dataset_{uuid.uuid4().hex[:8]}.csv"
-    
+
     upload_response = test_client.post(
         "/dataset/file/upload",
         data={"file": (io.BytesIO(csv_content), csv_filename)},
-        content_type="multipart/form-data"
+        content_type="multipart/form-data",
     )
     assert upload_response.status_code == 200
     uploaded_filename = upload_response.get_json()["filename"]
@@ -213,7 +215,7 @@ def test_dataset_create(test_client, monkeypatch):
 
     resp = test_client.post("/dataset/upload", data=dataset_data)
     assert resp.status_code == 200
-    
+
     with test_client.application.app_context():
         dataset = DataSet.query.filter_by(user_id=1).order_by(DataSet.id.desc()).first()
         assert dataset is not None
