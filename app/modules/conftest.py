@@ -2,6 +2,7 @@ import pytest
 
 from app import create_app, db
 from app.modules.auth.models import User
+from app.modules.profile.models import UserProfile
 
 
 @pytest.fixture(scope="session")
@@ -28,8 +29,20 @@ def test_client(test_app):
             The test suite always includes the following user in order to avoid repetition
             of its creation
             """
+            
             user_test = User(email="test@example.com", password="test1234")
             db.session.add(user_test)
+            db.session.commit()
+            
+            # Create UserProfile for the test user
+            user_profile = UserProfile(
+                user_id=user_test.id,
+                name="Test",
+                surname="User",
+                orcid=None,
+                affiliation=None
+            )
+            db.session.add(user_profile)
             db.session.commit()
 
             print("Rutas registradas:")
