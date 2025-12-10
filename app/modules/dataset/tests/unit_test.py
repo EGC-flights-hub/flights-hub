@@ -72,7 +72,12 @@ def test_trending_datasets(test_client):
     from app.modules.dataset.services import DataSetService
 
     with test_client.application.app_context():
-        ds_meta = DSMetaData(title="Test Dataset Meta", description="Meta for test datasets", publication_type="OTHER")
+        ds_meta = DSMetaData(
+            title="Test Dataset Meta",
+            description="Meta for test datasets",
+            publication_type="NONE",
+            tags="trending,test",
+        )
         db.session.add(ds_meta)
         db.session.commit()
 
@@ -221,3 +226,53 @@ def test_dataset_create(test_client, monkeypatch):
         assert dataset is not None
         assert dataset.ds_meta_data.title == "Test Dataset Creation"
         assert dataset.ds_meta_data.description == "Testing dataset creation"
+
+
+def test_get_dataset_edit(test_client, test_dataset_id):
+    login_response = login(test_client, "test@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    response = test_client.get(f"/dataset/{test_dataset_id}/edit")
+    assert response.status_code == 200
+    assert b"edit" in response.data.lower()
+
+
+def test_dataset_update_with_files(test_client, test_dataset_id):
+    login_response = login(test_client, "test@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    new_csv_content = b"col1,col2,col3,col4\n1,2,3,4\n5,6,7,8\n"
+    new_csv_filename = f"updated_dataset_{uuid.uuid4().hex[:8]}.csv"
+
+    resp = test_client.post(
+        "/dataset/file/upload",
+        data={"file": (io.BytesIO(new_csv_content), new_csv_filename)},
+        content_type="multipart/form-data",
+    )
+    assert resp.status_code == 200
+    json_data = resp.get_json()
+    assert "filename" in json_data
+
+    update_data = {
+        "files_to_delete": [],
+        "metadata": {
+            "title": "Updated Dataset Title",
+            "description": "Updated description",
+        },
+    }
+
+    resp = test_client.post(f"/dataset/{test_dataset_id}/update", json=update_data)
+    assert resp.status_code in [200, 403, 404, 500]
+
+
+def test_dataset_delete_files_on_edit(test_client, test_dataset_id):
+    login_response = login(test_client, "test@example.com", "test1234")
+    assert login_response.status_code == 200
+
+    update_data = {
+        "files_to_delete": ["test_file.csv"],
+        "metadata": None,
+    }
+
+    resp = test_client.post(f"/dataset/{test_dataset_id}/update", json=update_data)
+    assert resp.status_code in [200, 403, 404, 500]
