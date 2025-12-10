@@ -42,7 +42,7 @@ def test_download_count(driver, host):
     driver.find_element(By.CSS_SELECTOR, ".sidebar-toggle").click()
     driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn:nth-child(2) > .feather").click()
     driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
-    driver.find_element(By.LINK_TEXT, "Download all (84 bytes)").click()
+    driver.find_element(By.LINK_TEXT, "Download (84 bytes)").click()
 
 
 def test_recomendation(self):
