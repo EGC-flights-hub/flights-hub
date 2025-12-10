@@ -46,8 +46,7 @@ class DSMetaDataRepository(BaseRepository):
     def filter_by_doi(self, doi: str) -> Optional[DSMetaData]:
         # Get the most recent version by joining with DataSet and filtering by latest version
         return (
-            self.model.query
-            .join(DataSet, self.model.id == DataSet.ds_meta_data_id)
+            self.model.query.join(DataSet, self.model.id == DataSet.ds_meta_data_id)
             .filter(self.model.dataset_doi == doi)
             .filter(~DataSet.next_version.any())  # Only get the latest version
             .first()
