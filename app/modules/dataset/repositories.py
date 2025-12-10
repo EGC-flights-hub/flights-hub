@@ -44,7 +44,14 @@ class DSMetaDataRepository(BaseRepository):
         super().__init__(DSMetaData)
 
     def filter_by_doi(self, doi: str) -> Optional[DSMetaData]:
-        return self.model.query.filter_by(dataset_doi=doi).first()
+        # Get the most recent version by joining with DataSet and filtering by latest version
+        return (
+            self.model.query
+            .join(DataSet, self.model.id == DataSet.ds_meta_data_id)
+            .filter(self.model.dataset_doi == doi)
+            .filter(~DataSet.next_version.any())  # Only get the latest version
+            .first()
+        )
 
 
 class DSViewRecordRepository(BaseRepository):
@@ -82,6 +89,7 @@ class DataSetRepository(BaseRepository):
         return (
             self.model.query.join(DSMetaData)
             .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_doi.isnot(None))
+            .filter(~self.model.next_version.any())  # Only get latest versions
             .order_by(self.model.created_at.desc())
             .all()
         )
@@ -90,6 +98,7 @@ class DataSetRepository(BaseRepository):
         return (
             self.model.query.join(DSMetaData)
             .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_doi.is_(None))
+            .filter(~self.model.next_version.any())  # Only get latest versions
             .order_by(self.model.created_at.desc())
             .all()
         )
