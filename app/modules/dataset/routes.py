@@ -482,9 +482,7 @@ def get_file_diff(dataset_id, file_name):
 
     # Get file paths
     working_dir = os.getenv("WORKING_DIR", "")
-    current_path = os.path.join(
-        working_dir, "uploads", f"user_{dataset.user_id}", f"dataset_{dataset.id}", file_name
-    )
+    current_path = os.path.join(working_dir, "uploads", f"user_{dataset.user_id}", f"dataset_{dataset.id}", file_name)
     previous_path = os.path.join(
         working_dir,
         "uploads",
