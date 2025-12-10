@@ -175,9 +175,10 @@
                     <ul class="mt-2 list-group" id="file-list"></ul>
 
                     <script>
-                        let filesToDelete = [];
-                        let uploadedFileCount = 0;
-
+                        // GLOBAL variables declared at window level so they're accessible everywhere
+                        window.filesToDelete = [];
+                        window.uploadedFileCount = 0;
+                        
                         let dropzone = Dropzone.options.myDropzone = {
                             url: "/dataset/file/upload",
                             paramName: 'file',
@@ -227,24 +228,22 @@
                                     removeButton.addEventListener('click', function () {
                                         fileList.removeChild(listItem);
                                         this.removeFile(file);
-                                        uploadedFileCount--;
+                                        window.uploadedFileCount--;
                                         let xhr = new XMLHttpRequest();
                                         xhr.open('POST', '/dataset/file/delete', true);
                                         xhr.setRequestHeader('Content-Type', 'application/json');
                                         xhr.send(JSON.stringify({file: file.name}));
                                         
-                                        if (filesToDelete.length === 0 && uploadedFileCount === 0) {
-                                            document.getElementById('updateButton').style.display = 'none';
-                                        }
+                                        checkForChanges();
                                     }.bind(this));
 
                                     listItem.appendChild(removeButton);
                                     fileList.appendChild(listItem);
                                     
-                                    uploadedFileCount++;
+                                    window.uploadedFileCount++;
 
                                     // Show update button
-                                    document.getElementById('updateButton').style.display = 'block';
+                                    checkForChanges();
                                     feather.replace();
                                 });
                             }
@@ -267,7 +266,27 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOMContentLoaded - Initializing edit_dataset page');
             feather.replace();
+            
+            // RESET global state variables when page loads
+            window.filesToDelete = [];
+            window.uploadedFileCount = 0;
+            
+            // Store original values at page load time
+            window.originalValues = {
+                title: document.getElementById('titleInput').value,
+                description: document.getElementById('descriptionInput').value,
+                publicationType: document.getElementById('publicationTypeInput').value,
+                publicationDoi: document.getElementById('publicationDoiInput').value,
+                tags: document.getElementById('tagsInput').value
+            };
+            
+            console.log('Original values:', window.originalValues);
+            console.log('Reset variables:', window.filesToDelete, window.uploadedFileCount);
+            
+            // Clear file list UI
+            document.getElementById('file-list').innerHTML = '';
             
             // Listen for metadata changes
             document.getElementById('titleInput').addEventListener('input', checkForChanges);
@@ -275,17 +294,24 @@
             document.getElementById('publicationTypeInput').addEventListener('change', checkForChanges);
             document.getElementById('publicationDoiInput').addEventListener('input', checkForChanges);
             document.getElementById('tagsInput').addEventListener('input', checkForChanges);
+            
+            // Initial check
+            checkForChanges();
         });
 
         function checkForChanges() {
-            const hasDeletedFiles = filesToDelete.length > 0;
-            const hasNewFiles = uploadedFileCount > 0;
+            const hasDeletedFiles = window.filesToDelete && window.filesToDelete.length > 0;
+            const hasNewFiles = window.uploadedFileCount && window.uploadedFileCount > 0;
             const hasMetadataChanges = hasMetadataChanged();
+            
+            console.log('checkForChanges:', {hasDeletedFiles, hasNewFiles, hasMetadataChanges});
             
             if (hasDeletedFiles || hasNewFiles || hasMetadataChanges) {
                 document.getElementById('updateButton').style.display = 'block';
+                console.log('Showing update button');
             } else {
                 document.getElementById('updateButton').style.display = 'none';
+                console.log('Hiding update button');
             }
         }
 
@@ -296,19 +322,25 @@
             const currentPublicationDoi = document.getElementById('publicationDoiInput').value;
             const currentTags = document.getElementById('tagsInput').value;
 
-            const originalTitle = '{{ dataset.ds_meta_data.title }}';
-            const originalDescription = '{{ dataset.ds_meta_data.description }}';
-            const originalPublicationType = '{{ dataset.ds_meta_data.publication_type.value }}';
-            const originalPublicationDoi = '{{ dataset.ds_meta_data.publication_doi or '' }}';
-            const originalTags = '{{ dataset.ds_meta_data.tags or '' }}';
-
-            return (
-                currentTitle !== originalTitle ||
-                currentDescription !== originalDescription ||
-                currentPublicationType !== originalPublicationType ||
-                currentPublicationDoi !== originalPublicationDoi ||
-                currentTags !== originalTags
+            const changed = (
+                currentTitle !== window.originalValues.title ||
+                currentDescription !== window.originalValues.description ||
+                currentPublicationType !== window.originalValues.publicationType ||
+                currentPublicationDoi !== window.originalValues.publicationDoi ||
+                currentTags !== window.originalValues.tags
             );
+            
+            if (changed) {
+                console.log('Metadata has changed:', {
+                    title: currentTitle !== window.originalValues.title,
+                    description: currentDescription !== window.originalValues.description,
+                    publicationType: currentPublicationType !== window.originalValues.publicationType,
+                    publicationDoi: currentPublicationDoi !== window.originalValues.publicationDoi,
+                    tags: currentTags !== window.originalValues.tags
+                });
+            }
+            
+            return changed;
         }
 
         function deleteSelectedFiles() {
@@ -319,7 +351,8 @@
             }
 
             if (confirm('Are you sure you want to delete these files?')) {
-                filesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
+                window.filesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
+                console.log('Files marked for deletion:', window.filesToDelete);
                 
                 checkboxes.forEach(cb => {
                     const item = document.getElementById(`file-item-${cb.value}`);
@@ -346,8 +379,8 @@
             };
             
             // Check if there are any changes
-            const hasDeletedFiles = filesToDelete.length > 0;
-            const hasNewFiles = uploadedFileCount > 0;
+            const hasDeletedFiles = window.filesToDelete && window.filesToDelete.length > 0;
+            const hasNewFiles = window.uploadedFileCount && window.uploadedFileCount > 0;
             const hasMetadataChanges = hasMetadataChanged();
             
             if (!hasDeletedFiles && !hasNewFiles && !hasMetadataChanges) {
@@ -360,10 +393,10 @@
                 changesSummary.push('Metadata will be updated');
             }
             if (hasDeletedFiles) {
-                changesSummary.push(`${filesToDelete.length} file(s) will be deleted`);
+                changesSummary.push(`${window.filesToDelete.length} file(s) will be deleted`);
             }
             if (hasNewFiles) {
-                changesSummary.push(`${uploadedFileCount} new file(s) will be added`);
+                changesSummary.push(`${window.uploadedFileCount} new file(s) will be added`);
             }
 
             const confirmMessage = `This will create a new version of the dataset:\n\n${changesSummary.join('\n')}\n\nContinue?`;
@@ -400,7 +433,7 @@
             };
 
             xhr.send(JSON.stringify({
-                files_to_delete: filesToDelete,
+                files_to_delete: window.filesToDelete,
                 metadata: metadataChanges
             }));
         }
