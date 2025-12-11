@@ -86,9 +86,7 @@ class DataSetSeeder(BaseSeeder):
 
             # Calculate the real checksum and size
             checksum, size = calculate_checksum_and_size(csv_path)
-            csv_file = CSVFile(
-                name=csv_filename, checksum=checksum, size=size, dataset_id=dataset.id
-            )
+            csv_file = CSVFile(name=csv_filename, checksum=checksum, size=size, dataset_id=dataset.id)
             csv_files_list.append(csv_file)
 
         self.seed(csv_files_list)
