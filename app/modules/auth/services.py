@@ -17,9 +17,9 @@ from core.services.BaseService import BaseService
 
 @dataclass
 class ThrottleConfig:
-    max_attempts: int     # nº de intentos fallidos permitidos
-    window_seconds: int   # ventana de cómputo
-    lock_seconds: int   # duración del bloqueo
+    max_attempts: int = 5  # nº de intentos fallidos permitidos
+    window_seconds: int = 300  # ventana de cómputo
+    lock_seconds: int = 600  # duración del bloqueo
 
 
 class AuthenticationService(BaseService):
@@ -58,7 +58,6 @@ class AuthenticationService(BaseService):
         now = time.time()
         first_ts = rec.get("first_ts", now)
         locked_until = rec.get("locked_until")
-        # si la ventana expiró y NO está bloqueado, reinicia contador
         if (locked_until is None and
                 (now - first_ts) >= self.tcfg.window_seconds):
             rec["count"] = 0
@@ -96,13 +95,11 @@ class AuthenticationService(BaseService):
                 rec = {"count": 0, "first_ts": now, "locked_until": None}
                 self._fails[k] = rec
 
-            # si bloqueo expiró, limpiar
             if rec["locked_until"] is not None and now >= rec["locked_until"]:
                 rec["locked_until"] = None
                 rec["count"] = 0
                 rec["first_ts"] = now
 
-            # si no está bloqueado, gestionar ventana e incrementar
             if rec["locked_until"] is None:
                 if (now - rec["first_ts"]) >= self.tcfg.window_seconds:
                     rec["count"] = 0
@@ -110,7 +107,6 @@ class AuthenticationService(BaseService):
 
                 rec["count"] += 1
 
-                # si supera umbral → bloquear
                 if rec["count"] >= self.tcfg.max_attempts:
                     rec["locked_until"] = now + self.tcfg.lock_seconds
 
@@ -127,14 +123,12 @@ class AuthenticationService(BaseService):
                 rec["locked_until"] = None
 
     def login(self, email, password, remember=True):
-        # Reset estado previo
         self.error_code = None
         self.error_message = None
         self.remaining_attempts = None
 
         ip = self._client_ip()
 
-        # 1) Bloqueo previo por demasiados fallos
         if self._is_locked(email, ip):
             self.error_code = "too_many_failed_attempts"
             self.error_message = (
@@ -144,10 +138,8 @@ class AuthenticationService(BaseService):
             self.remaining_attempts = 0
             return False
 
-        # 2) Buscar usuario
         user = self.repository.get_by_email(email)
 
-        # 3) Usuario inexistente
         if user is None:
             count = self._register_failure(email, ip)
 
@@ -168,14 +160,11 @@ class AuthenticationService(BaseService):
             self.remaining_attempts = max(self.tcfg.max_attempts - count, 0)
             return False
 
-        # 4) Verificar contraseña
         if user.check_password(password):
             login_user(user, remember=remember)
-            # Éxito → reset del contador de fallos
             self._reset_failures(email, ip)
             return True
 
-        # 5) Contraseña incorrecta
         count = self._register_failure(email, ip)
 
         if self._is_locked(email, ip):
@@ -187,7 +176,6 @@ class AuthenticationService(BaseService):
             self.remaining_attempts = 0
             return False
 
-        # 6) Mensaje neutro mientras no esté bloqueado
         self.error_code = "invalid_credentials"
         self.error_message = (
             "Invalid credentials. Please try again later or reset your "

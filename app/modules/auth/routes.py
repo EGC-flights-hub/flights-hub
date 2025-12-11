@@ -4,15 +4,9 @@ from flask_login import current_user, login_user, logout_user
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import LoginForm, SignupForm
 from app.modules.profile.services import UserProfileService
-from app.modules.auth.services import AuthenticationService, ThrottleConfig
+from app.modules.auth.services import AuthenticationService
 
-authentication_service = AuthenticationService(
-    throttle_config=ThrottleConfig(
-        max_attempts=5,
-        window_seconds=900,
-        lock_seconds=600
-    )
-)
+authentication_service = AuthenticationService()
 user_profile_service = UserProfileService()
 
 
