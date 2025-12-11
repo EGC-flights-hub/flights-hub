@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 from app.modules.auth.models import User
 from app.modules.dataset.models import Author, CSVFile, DataSet, DSMetaData, DSMetrics, PublicationType
+from app.modules.dataset.services import calculate_checksum_and_size
 from core.seeders.BaseSeeder import BaseSeeder
 
 
@@ -83,8 +84,10 @@ class DataSetSeeder(BaseSeeder):
                 f.write("id,name,value\n")
                 f.write(f"1,Item {i+1},100\n")
 
+            # Calculate the real checksum and size
+            checksum, size = calculate_checksum_and_size(csv_path)
             csv_file = CSVFile(
-                name=csv_filename, checksum=f"checksum{i+1}", size=os.path.getsize(csv_path), dataset_id=dataset.id
+                name=csv_filename, checksum=checksum, size=size, dataset_id=dataset.id
             )
             csv_files_list.append(csv_file)
 
