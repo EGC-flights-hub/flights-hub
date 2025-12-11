@@ -1,7 +1,9 @@
 import pytest
+import re
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
-
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import close_driver, initialize_driver
 
@@ -79,3 +81,35 @@ def test_index():
 
 # Call the test function
 test_index()
+
+
+def test_edit_dataset(driver, host):
+    driver.get(host)
+    driver.set_window_size(1850, 1053)
+    driver.find_element(By.LINK_TEXT, "Login").click()
+    driver.find_element(By.ID, "email").click()
+    driver.find_element(By.ID, "email").send_keys("user1@example.com")
+    driver.find_element(By.ID, "password").click()
+    driver.find_element(By.ID, "password").send_keys("1234")
+    driver.find_element(By.ID, "submit").click()
+    driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(7) .align-middle:nth-child(2)").click()
+    driver.find_element(By.LINK_TEXT, "Sample dataset 1").click()
+    driver.find_element(By.LINK_TEXT, "Edit").click()
+    driver.find_element(By.ID, "descriptionInput").click()
+    driver.find_element(By.ID, "descriptionInput").send_keys(
+        "Description for dataset 1\\nChange 1Description for dataset 1 edit selenium\\nChange 2\\nChanged metadata"
+    )
+    driver.find_element(By.ID, "publicationTypeInput").click()
+    driver.find_element(By.CSS_SELECTOR, "option:nth-child(19)").click()
+    driver.find_element(By.ID, "updateButton").click()
+    assert (
+        driver.switch_to.alert.text
+        == "This will create a new version of the dataset:\n\nMetadata will be updated\n\nContinue?"
+    )
+    driver.switch_to.alert.accept()
+    WebDriverWait(driver, 10).until(EC.alert_is_present())
+    alert_text = driver.switch_to.alert.text
+    assert alert_text.startswith("Dataset updated successfully!")
+    version_match = re.search(r"New version: v(\d+)", alert_text)
+    assert version_match is not None
+    driver.switch_to.alert.accept()
