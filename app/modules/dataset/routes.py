@@ -14,15 +14,15 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_file,
     send_from_directory,
     url_for,
-    send_file,
 )
 from flask_login import current_user, login_required
 
 from app.modules.dataset import dataset_bp
 from app.modules.dataset.forms import DataSetForm
-from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData, CSVFile
+from app.modules.dataset.models import CSVFile, DataSet, DSDownloadRecord, DSMetaData
 from app.modules.dataset.services import (
     AuthorService,
     DataSetService,
@@ -343,13 +343,12 @@ def dataset_badge_html(dataset_id):
 
 
 @dataset_bp.route("/csvfile/download/<int:file_id>", methods=["GET"])
-def download_csv_file(file_id): 
+def download_csv_file(file_id):
 
     csv_file = CSVFile.query.get_or_404(file_id)
     dataset = csv_file.data_set
 
     file_path = os.path.join("uploads", f"user_{dataset.user_id}", f"dataset_{dataset.id}", csv_file.name)
-
 
     # Record download
     user_id = current_user.id if current_user.is_authenticated else None
