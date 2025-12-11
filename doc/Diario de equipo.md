@@ -14,6 +14,8 @@
 
 - Se ha notificado formalmente al compañero Samuel por su inactividad siguiendo el proceso declarado en el acta fundacional.
 
+- Se ha identificado un mal funcionamiento en la descarga de csv. Ha sido corregido inmediatamente.
+
 ## Decisiones de diseño
 
 - Se ha implementado Sonarqube solo en la rama main debido a la necesidad de utilizar planes de pago para adaptarlo al workflow propuesto inicialmente.
