@@ -1,16 +1,16 @@
 import io
-import re
-import uuid
-from app.modules.dataset.services import DiffService
-import tempfile
 import os
+import re
+import tempfile
+import uuid
+
 import pytest
 
-from app.modules.conftest import login
-from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData, DSViewRecord
 from app import db
 from app.modules.auth.models import User
-from app.modules.dataset.services import DataSetService
+from app.modules.conftest import login
+from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData, DSViewRecord
+from app.modules.dataset.services import DataSetService, DiffService
 
 
 @pytest.fixture(scope="module")
@@ -376,9 +376,10 @@ def test_dataset_version_chain(test_client):
 
 def test_get_file_diff_between_versions(test_client):
     """Test generating diffs between file versions"""
-    from app.modules.dataset.services import DiffService
-    import tempfile
     import os
+    import tempfile
+
+    from app.modules.dataset.services import DiffService
 
     with test_client.application.app_context():
         with tempfile.TemporaryDirectory() as tmpdir:
