@@ -16,12 +16,13 @@ from flask import (
     request,
     send_from_directory,
     url_for,
+    send_file,
 )
 from flask_login import current_user, login_required
 
 from app.modules.dataset import dataset_bp
 from app.modules.dataset.forms import DataSetForm
-from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData
+from app.modules.dataset.models import DataSet, DSDownloadRecord, DSMetaData, CSVFile
 from app.modules.dataset.services import (
     AuthorService,
     DataSetService,
@@ -342,13 +343,13 @@ def dataset_badge_html(dataset_id):
 
 
 @dataset_bp.route("/csvfile/download/<int:file_id>", methods=["GET"])
-def download_csv_file(file_id):
-    from app.modules.dataset.models import CSVFile
+def download_csv_file(file_id): 
 
     csv_file = CSVFile.query.get_or_404(file_id)
     dataset = csv_file.data_set
 
     file_path = os.path.join("uploads", f"user_{dataset.user_id}", f"dataset_{dataset.id}", csv_file.name)
+
 
     # Record download
     user_id = current_user.id if current_user.is_authenticated else None
@@ -361,12 +362,11 @@ def download_csv_file(file_id):
     dataset.ds_meta_data.downloads += 1
     dataset_service.update_dsmetadata(dataset.ds_meta_data_id)
 
-    return send_from_directory(os.path.dirname(file_path), os.path.basename(file_path), as_attachment=True)
+    return send_file(f"/app/{file_path}", as_attachment=True)
 
 
 @dataset_bp.route("/csvfile/view/<int:file_id>", methods=["GET"])
 def view_csv_file(file_id):
-    from app.modules.dataset.models import CSVFile
 
     csv_file = CSVFile.query.get_or_404(file_id)
     dataset = csv_file.data_set
