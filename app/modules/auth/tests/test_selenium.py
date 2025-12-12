@@ -89,7 +89,7 @@ def test_login_rate_limit():
         time.sleep(2)
 
         # Look for the lockout message due to too many attempts
-        error_text = "Too many failed sign-in attempts. For security, your access is temporarily blocked."
+        error_text = "Too many failed sign-in attempts. Your access is temporarily blocked."
         try:
             driver.find_element(
                 By.XPATH,

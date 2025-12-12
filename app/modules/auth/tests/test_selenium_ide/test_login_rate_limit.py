@@ -3,7 +3,7 @@ from selenium.webdriver.common.by import By
 from core.selenium.common import initialize_driver
 
 
-class TestLoginRateLimit():
+class TestLoginRateLimit:
     def setup_method(self, method):
         self.driver = initialize_driver()
         self.vars = {}
