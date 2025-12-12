@@ -154,8 +154,8 @@ class AuthenticationService(BaseService):
 
             self.error_code = "invalid_credentials"
             self.error_message = (
-                "Unable to sign in. "
-                "Please try again later or reset your password."
+                "Invalid credentials. Please try again later or reset your "
+                "password."
             )
             self.remaining_attempts = max(self.tcfg.max_attempts - count, 0)
             return False
