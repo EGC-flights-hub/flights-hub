@@ -132,8 +132,7 @@ class AuthenticationService(BaseService):
         if self._is_locked(email, ip):
             self.error_code = "too_many_failed_attempts"
             self.error_message = (
-                    "Too many failed sign-in attempts. "
-                    "For security, your access is temporarily blocked."
+                    "Too many failed sign-in attempts. For security, your access is temporarily blocked."
                 )
             self.remaining_attempts = 0
             return False
@@ -146,17 +145,13 @@ class AuthenticationService(BaseService):
             if self._is_locked(email, ip):
                 self.error_code = "too_many_failed_attempts"
                 self.error_message = (
-                    "Too many failed sign-in attempts. "
-                    "For security, your access is temporarily blocked."
+                    "Too many failed sign-in attempts. For security, your access is temporarily blocked."
                 )
                 self.remaining_attempts = 0
                 return False
 
             self.error_code = "invalid_credentials"
-            self.error_message = (
-                "Invalid credentials. Please try again later or reset your "
-                "password."
-            )
+            self.error_message = "Invalid credentials. Please try again later or reset your password."
             self.remaining_attempts = max(self.tcfg.max_attempts - count, 0)
             return False
 
@@ -170,16 +165,14 @@ class AuthenticationService(BaseService):
         if self._is_locked(email, ip):
             self.error_code = "too_many_failed_attempts"
             self.error_message = (
-                "Too many failed sign-in attempts. "
-                "For security, your access is temporarily blocked."
+                "Too many failed sign-in attempts. For security, your access is temporarily blocked."
             )
             self.remaining_attempts = 0
             return False
 
         self.error_code = "invalid_credentials"
         self.error_message = (
-            "Invalid credentials. Please try again later or reset your "
-            "password."
+            "Invalid credentials. Please try again later or reset your password."
         )
         self.remaining_attempts = max(self.tcfg.max_attempts - count, 0)
         return False
