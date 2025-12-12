@@ -3,8 +3,8 @@ from flask_login import current_user, login_user, logout_user
 
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import LoginForm, SignupForm
-from app.modules.profile.services import UserProfileService
 from app.modules.auth.services import AuthenticationService
+from app.modules.profile.services import UserProfileService
 
 authentication_service = AuthenticationService()
 user_profile_service = UserProfileService()
@@ -19,14 +19,12 @@ def show_signup_form():
     if form.validate_on_submit():
         email = form.email.data
         if not authentication_service.is_email_available(email):
-            return render_template("auth/signup_form.html", form=form,
-                                   error=f"Email {email} in use")
+            return render_template("auth/signup_form.html", form=form, error=f"Email {email} in use")
 
         try:
             user = authentication_service.create_with_profile(**form.data)
         except Exception as exc:
-            return render_template("auth/signup_form.html", form=form,
-                                   error=f"Error creating user: {exc}")
+            return render_template("auth/signup_form.html", form=form, error=f"Error creating user: {exc}")
 
         # Log user
         login_user(user, remember=True)
@@ -47,8 +45,7 @@ def login():
         remember = getattr(form, "remember", None)
         remember_val = bool(remember.data) if remember is not None else True
 
-        ok = authentication_service.login(form.email.data, form.password.data,
-                                          remember=remember_val)
+        ok = authentication_service.login(form.email.data, form.password.data, remember=remember_val)
         if ok:
             return redirect(url_for("public.index"))
 
@@ -59,11 +56,7 @@ def login():
 
         return (
             render_template(
-                "auth/login_form.html",
-                form=form,
-                error=err_msg,
-                error_code=err_code,
-                remaining_attempts=remaining
+                "auth/login_form.html", form=form, error=err_msg, error_code=err_code, remaining_attempts=remaining
             ),
             status,
         )
