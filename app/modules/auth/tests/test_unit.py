@@ -280,7 +280,7 @@ def test_throttle_is_per_email_and_ip(clean_database, test_client):
     """
     service = AuthenticationService(
         throttle_config=ThrottleConfig(
-            max_attempts=2,    # ahora el bloqueo se activa en el segundo fallo
+            max_attempts=2,  # ahora el bloqueo se activa en el segundo fallo
             window_seconds=300,
             lock_seconds=600,
         )
