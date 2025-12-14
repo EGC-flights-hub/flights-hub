@@ -20,6 +20,13 @@
 
 - Se ha implementado Sonarqube solo en la rama main debido a la necesidad de utilizar planes de pago para adaptarlo al workflow propuesto inicialmente.
 
-- Dado que solo se van a utilizar CSV, eliminar todo lo referente a UVL y sobrescribirlo para CSV. Eliminación de test e implementación de featureModel, realizando un modelo mucho más simple que solo trabaja con dataset y csv.
+- Dado que solo se van a utilizar CSV, eliminar todo lo referente a UVL y sobrescribirlo para CSV. Eliminación de test e implementación de featureModel, realizando un modelo mucho más simple donde los datasets están compuestos solo de archivos csv.
 
 - Se ha decidido que el "Documento del proyecto" descrito en el Acta fundacional sea el ReadMe y el contenido de este ha sido extendido.
+
+- Como asignar un DOI no es obligatorio al crear un dataset, se ha optado por asignarle a aquellos que carezcan de él un identificador "/dataset/unsynchronized/{self.id}" de forma automática. Con ello, hemos permitido deliberadamente que, tanto aquellos que "estén sincronizados" como los que no, aparezcan públicamente en el listado de datasets de la aplicación.
+
+- Para crear una nueva versión de un dataset concreto, el usuario que lo subió originalmente dispondrá de un botón "Edit", donde podrá cambiar los metadatos y/o añadir o eliminar archivos. Para que un archivo entre versiones aparezca como "Modified", debe resubirse con el mismo nombre. Así, si su contenido ha cambiado, el checksum con respecto al anterior será distinto y se detectará como modificado.
+  
+- Si un dataset tiene más de una versión, solo aparecerá en el listado de datasets la última. Aun así, mediante las funcionalidades de versionado, pueden comprobarse cuáles son los cambios entre versiones y descargar la más conveniente.
+
