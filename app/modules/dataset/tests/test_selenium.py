@@ -31,8 +31,8 @@ def test_badge(driver, host):
     driver.find_element(By.ID, "password").send_keys("1234")
     driver.find_element(By.ID, "submit").click()
     driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
-    driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn:nth-child(4)").click()
-    driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(5)").click()
+    driver.find_element(By.CSS_SELECTOR, ".mt-3 > .btn:nth-child(1)").click()
+    driver.find_element(By.CSS_SELECTOR, ".mt-3 > .btn:nth-child(2)").click()
     driver.find_element(By.LINK_TEXT, "Doe, John").click()
     driver.find_element(By.LINK_TEXT, "Log out").click()
 
