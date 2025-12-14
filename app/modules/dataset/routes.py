@@ -333,7 +333,8 @@ def dataset_badge(dataset_id):
     total_width = left_width + right_width
 
     svg = f"""\
-<svg xmlns="http://www.w3.org/2000/svg" width="{total_width}" height="{height}" role="img" aria-label="{label} downloads">
+<svg xmlns="http://www.w3.org/2000/svg" width="{total_width}" 
+height="{height}" role="img" aria-label="{label} downloads">
     <defs>
         <linearGradient id="badge-glow" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#0ea5e9"/>
@@ -345,11 +346,14 @@ def dataset_badge(dataset_id):
         </linearGradient>
     </defs>
 
-    <rect width="{total_width}" height="{height}" rx="8" fill="url(#badge-fill)" stroke="#0ea5e9" stroke-width="1"/>
+    <rect width="{total_width}" height="{height}" rx="8" fill="url(#badge-fill)"
+      stroke="#0ea5e9" stroke-width="1"/>
     <rect x="{left_width}" width="{right_width}" height="{height}" rx="8" fill="url(#badge-glow)"/>
-    <line x1="{left_width}" y1="1" x2="{left_width}" y2="{height - 1}" stroke="#0ea5e9" stroke-opacity="0.35"/>
+    <line x1="{left_width}" y1="1" x2="{left_width}" y2="{height - 1}" stroke="#0ea5e9"
+      stroke-opacity="0.35"/>
 
-    <g fill="#e2e8f0" text-anchor="middle" font-family="Segoe UI, Ubuntu, Helvetica, sans-serif" font-size="12" font-weight="600">
+    <g fill="#e2e8f0" text-anchor="middle" font-family="Segoe UI, Ubuntu,
+     Helvetica, sans-serif" font-size="12" font-weight="600">
         <text x="{left_width/2}" y="{height/2 + 4}">{label}</text>
         <text x="{left_width + right_width/2}" y="{height/2 + 4}" fill="#0b1220">{value}</text>
     </g>
