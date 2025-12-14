@@ -18,26 +18,30 @@ for dep in dependencies:
         "filePath": dep.get("filePath"),
         "isVirtual": dep.get("isVirtual"),
     }
-    
+
     vulns = dep.get("vulnerabilities", [])
     if vulns:  # Si hay vulnerabilidades, añadir una fila por cada vulnerabilidad
         for v in vulns:
             row = base_info.copy()
-            row.update({
-                "vuln_name": v.get("name"),
-                "vuln_source": v.get("source"),
-                "vuln_severity": v.get("severity"),
-                "vuln_description": v.get("description"),
-            })
+            row.update(
+                {
+                    "vuln_name": v.get("name"),
+                    "vuln_source": v.get("source"),
+                    "vuln_severity": v.get("severity"),
+                    "vuln_description": v.get("description"),
+                }
+            )
             rows.append(row)
     else:  # Si no hay vulnerabilidades, añadir fila vacía en esos campos
         row = base_info.copy()
-        row.update({
-            "vuln_name": None,
-            "vuln_source": None,
-            "vuln_severity": None,
-            "vuln_description": None,
-        })
+        row.update(
+            {
+                "vuln_name": None,
+                "vuln_source": None,
+                "vuln_severity": None,
+                "vuln_description": None,
+            }
+        )
         rows.append(row)
 
 

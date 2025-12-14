@@ -29,7 +29,7 @@ class ExploreRepository(BaseRepository):
             self.model.query.join(DataSet.ds_meta_data)
             .join(DSMetaData.authors)
             .filter(or_(*filters))
-            .filter(DSMetaData.dataset_doi.isnot(None))  # Exclude datasets with empty dataset_doi
+            .filter(~self.model.next_version.any())  # Only get latest versions
         )
 
         if publication_type != "any":

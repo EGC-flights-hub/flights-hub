@@ -14,6 +14,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_file,
     send_from_directory,
     url_for,
 )
@@ -21,7 +22,7 @@ from flask_login import current_user, login_required
 
 from app.modules.dataset import dataset_bp
 from app.modules.dataset.forms import DataSetForm
-from app.modules.dataset.models import DSDownloadRecord
+from app.modules.dataset.models import CSVFile, DataSet, DSDownloadRecord, DSMetaData
 from app.modules.dataset.services import (
     AuthorService,
     DataSetService,
@@ -183,13 +184,24 @@ def delete():
 
 
 @dataset_bp.route("/dataset/download/<int:dataset_id>", methods=["GET"])
-def download_dataset(dataset_id):
+@dataset_bp.route("/dataset/download/<int:dataset_id>/<int:version_id>", methods=["GET"])
+def download_dataset(dataset_id, version_id=None):
     dataset = dataset_service.get_or_404(dataset_id)
 
-    file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
+    # If a specific version is requested, use that; otherwise use the current dataset
+    if version_id is not None:
+        download_dataset_obj = dataset_service.get_or_404(version_id)
+        # Verify that the version belongs to this dataset chain
+        all_versions = dataset.get_all_versions()
+        if download_dataset_obj not in all_versions:
+            abort(404)
+    else:
+        download_dataset_obj = dataset
+
+    file_path = f"uploads/user_{download_dataset_obj.user_id}/dataset_{download_dataset_obj.id}/"
 
     temp_dir = tempfile.mkdtemp()
-    zip_path = os.path.join(temp_dir, f"dataset_{dataset_id}.zip")
+    zip_path = os.path.join(temp_dir, f"dataset_{dataset_id}_v{download_dataset_obj.version}.zip")
 
     with ZipFile(zip_path, "w") as zipf:
         for subdir, dirs, files in os.walk(file_path):
@@ -210,7 +222,7 @@ def download_dataset(dataset_id):
         resp = make_response(
             send_from_directory(
                 temp_dir,
-                f"dataset_{dataset_id}.zip",
+                f"dataset_{dataset_id}_v{download_dataset_obj.version}.zip",
                 as_attachment=True,
                 mimetype="application/zip",
             )
@@ -219,7 +231,7 @@ def download_dataset(dataset_id):
     else:
         resp = send_from_directory(
             temp_dir,
-            f"dataset_{dataset_id}.zip",
+            f"dataset_{dataset_id}_v{download_dataset_obj.version}.zip",
             as_attachment=True,
             mimetype="application/zip",
         )
@@ -276,11 +288,16 @@ def subdomain_index(doi):
 
 
 @dataset_bp.route("/dataset/unsynchronized/<int:dataset_id>/", methods=["GET"])
-@login_required
 def get_unsynchronized_dataset(dataset_id):
 
     # Get dataset
-    dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
+    if current_user.is_authenticated:
+        dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
+    else:
+        # Allow anonymous users to view unsynchronized datasets
+        dataset = (
+            DataSet.query.filter_by(id=dataset_id).join(DSMetaData).filter(DSMetaData.dataset_doi.is_(None)).first()
+        )
 
     if not dataset:
         abort(404)
@@ -327,7 +344,6 @@ def dataset_badge_html(dataset_id):
 
 @dataset_bp.route("/csvfile/download/<int:file_id>", methods=["GET"])
 def download_csv_file(file_id):
-    from app.modules.dataset.models import CSVFile
 
     csv_file = CSVFile.query.get_or_404(file_id)
     dataset = csv_file.data_set
@@ -345,12 +361,11 @@ def download_csv_file(file_id):
     dataset.ds_meta_data.downloads += 1
     dataset_service.update_dsmetadata(dataset.ds_meta_data_id)
 
-    return send_from_directory(os.path.dirname(file_path), os.path.basename(file_path), as_attachment=True)
+    return send_file(f"/app/{file_path}", as_attachment=True)
 
 
 @dataset_bp.route("/csvfile/view/<int:file_id>", methods=["GET"])
 def view_csv_file(file_id):
-    from app.modules.dataset.models import CSVFile
 
     csv_file = CSVFile.query.get_or_404(file_id)
     dataset = csv_file.data_set
@@ -387,4 +402,159 @@ def validate_csv_file(file_id):
 
         return jsonify({"message": "Valid CSV file"}), 200
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@dataset_bp.route("/dataset/<int:dataset_id>/compare", methods=["GET"])
+def compare_versions(dataset_id):
+    """
+    Compare the current dataset version with a specified version or the previous version by default.
+    """
+    dataset = dataset_service.get_by_id(dataset_id)
+    if not dataset:
+        return jsonify({"error": "Dataset not found"}), 404
+
+    compare_version_id = request.args.get("version_id", type=int)
+    compare_version = None
+
+    if compare_version_id:
+        compare_version = dataset_service.get_by_id(compare_version_id)
+        if not compare_version:
+            return jsonify({"error": "Version to compare not found"}), 404
+
+    comparison_result = dataset.compare_with_version(compare_version)
+
+    return jsonify(comparison_result), 200
+
+
+@dataset_bp.route("/dataset/<int:dataset_id>/compare_metadata", methods=["GET"])
+def compare_metadata_versions(dataset_id):
+    """
+    Compare the current dataset version's metadata with a specified version or the previous version by default.
+    """
+    dataset = dataset_service.get_by_id(dataset_id)
+    if not dataset:
+        return jsonify({"error": "Dataset not found"}), 404
+
+    compare_version_id = request.args.get("version_id", type=int)
+    compare_version = None
+
+    if compare_version_id:
+        compare_version = dataset_service.get_by_id(compare_version_id)
+        if not compare_version:
+            return jsonify({"error": "Version to compare not found"}), 404
+
+    comparison_result = dataset.compare_metadata_with_version(compare_version)
+    return jsonify(comparison_result), 200
+
+
+@dataset_bp.route("/dataset/<int:dataset_id>/compare/diff/<file_name>", methods=["GET"])
+def get_file_diff(dataset_id, file_name):
+    """
+    Get a detailed diff of a specific file between two versions.
+    Query parameter: version_id (optional) - the version to compare with
+    """
+    from app.modules.dataset.models import CSVFile
+    from app.modules.dataset.services import DiffService
+
+    dataset = dataset_service.get_by_id(dataset_id)
+    if not dataset:
+        return jsonify({"error": "Dataset not found"}), 404
+
+    compare_version_id = request.args.get("version_id", type=int)
+    compare_version = dataset.previous_version
+
+    if compare_version_id:
+        compare_version = dataset_service.get_by_id(compare_version_id)
+        if not compare_version:
+            return jsonify({"error": "Version to compare not found"}), 404
+
+    if not compare_version:
+        return jsonify({"error": "No previous version to compare"}), 404
+
+    # Find the file in both versions
+    current_file = CSVFile.query.filter_by(name=file_name, dataset_id=dataset.id).first()
+    previous_file = CSVFile.query.filter_by(name=file_name, dataset_id=compare_version.id).first()
+
+    if not current_file or not previous_file:
+        return jsonify({"error": "File not found in one or both versions"}), 404
+
+    # Get file paths
+    working_dir = os.getenv("WORKING_DIR", "")
+    current_path = os.path.join(working_dir, "uploads", f"user_{dataset.user_id}", f"dataset_{dataset.id}", file_name)
+    previous_path = os.path.join(
+        working_dir,
+        "uploads",
+        f"user_{compare_version.user_id}",
+        f"dataset_{compare_version.id}",
+        file_name,
+    )
+
+    try:
+        diff_result = DiffService.get_file_diff(previous_path, current_path)
+        return jsonify(diff_result), 200
+    except Exception as e:
+        logger.exception(f"Error generating diff for file {file_name}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@dataset_bp.route("/dataset/<int:dataset_id>/edit", methods=["GET"])
+@login_required
+def edit_dataset(dataset_id):
+    """
+    Edit a dataset - only the owner can edit it.
+    Allows uploading new files or deleting existing ones to create a new version.
+    """
+    dataset = dataset_service.get_by_id(dataset_id)
+    if not dataset:
+        abort(404)
+
+    # Only the owner can edit the dataset
+    if current_user.id != dataset.user_id:
+        abort(403)
+
+    form = DataSetForm()
+
+    return render_template("dataset/edit_dataset.html", dataset=dataset, form=form)
+
+
+@dataset_bp.route("/dataset/<int:dataset_id>/update", methods=["POST"])
+@login_required
+def update_dataset(dataset_id):
+    """
+    Update a dataset by uploading new files, removing files, or updating metadata.
+    Creates a new version and maintains previous version link.
+    """
+    dataset = dataset_service.get_by_id(dataset_id)
+    if not dataset:
+        return jsonify({"error": "Dataset not found"}), 404
+
+    # Only the owner can edit the dataset
+    if current_user.id != dataset.user_id:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    # Get the list of files to delete and metadata changes
+    data = request.get_json() or {}
+    files_to_delete = data.get("files_to_delete", [])
+    metadata_changes = data.get("metadata", None)
+
+    try:
+        # Create a new version with optional metadata changes
+        new_version = dataset_service.create_new_version(dataset, files_to_delete, current_user, metadata_changes)
+
+        # Move new CSV files from temp folder to the new version's directory
+        dataset_service.move_csv_files(new_version)
+
+        return (
+            jsonify(
+                {
+                    "message": "Dataset updated successfully",
+                    "new_version_id": new_version.id,
+                    "version": new_version.version,
+                }
+            ),
+            200,
+        )
+    except Exception as e:
+        logger.exception(f"Exception updating dataset: {e}")
         return jsonify({"error": str(e)}), 500

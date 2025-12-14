@@ -40,6 +40,10 @@ class DataSetService(BaseService):
         self.dsviewrecord_repostory = DSViewRecordRepository()
 
     def move_csv_files(self, dataset: DataSet):
+        """
+        Move CSV files from temp folder to the dataset directory.
+        Also creates CSVFile database entries for any new files found in temp folder.
+        """
         current_user = AuthenticationService().get_authenticated_user()
         source_dir = current_user.temp_folder()
 
@@ -48,8 +52,33 @@ class DataSetService(BaseService):
 
         os.makedirs(dest_dir, exist_ok=True)
 
+        # Move existing dataset files
         for csv_file in dataset.csv_files:
-            shutil.move(os.path.join(source_dir, csv_file.name), dest_dir)
+            src_path = os.path.join(source_dir, csv_file.name)
+            dst_path = os.path.join(dest_dir, csv_file.name)
+            if os.path.exists(src_path):
+                shutil.move(src_path, dst_path)
+
+        # Add any remaining files in source_dir to the dataset
+        if os.path.exists(source_dir):
+            for filename in os.listdir(source_dir):
+                if filename.endswith(".csv"):
+                    src_path = os.path.join(source_dir, filename)
+                    dst_path = os.path.join(dest_dir, filename)
+
+                    # Move file to destination
+                    shutil.move(src_path, dst_path)
+
+                    # Create CSVFile entry if it doesn't exist
+                    existing = CSVFile.query.filter_by(name=filename, dataset_id=dataset.id).first()
+
+                    if not existing:
+                        checksum, size = calculate_checksum_and_size(dst_path)
+                        csv_file = CSVFile(name=filename, checksum=checksum, size=size, dataset_id=dataset.id)
+                        self.repository.session.add(csv_file)
+                        dataset.csv_files.append(csv_file)
+
+            self.repository.session.commit()
 
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_synchronized(current_user_id)
@@ -195,6 +224,95 @@ class DataSetService(BaseService):
 
         return [item["dataset"] for item in candidates[:4]]
 
+    def create_new_version(
+        self, dataset: DataSet, files_to_delete: list, current_user, metadata_changes: dict = None
+    ) -> DataSet:
+        try:
+            # Prepare metadata values - use updated values if provided, otherwise keep original
+            metadata_values = {
+                "title": metadata_changes.get("title") if metadata_changes else dataset.ds_meta_data.title,
+                "description": (
+                    metadata_changes.get("description") if metadata_changes else dataset.ds_meta_data.description
+                ),
+                "publication_type": (
+                    self._convert_publication_type(metadata_changes.get("publication_type"))
+                    if metadata_changes and metadata_changes.get("publication_type")
+                    else dataset.ds_meta_data.publication_type
+                ),
+                "publication_doi": (
+                    metadata_changes.get("publication_doi")
+                    if metadata_changes
+                    else dataset.ds_meta_data.publication_doi
+                ),
+                "dataset_doi": dataset.ds_meta_data.dataset_doi,
+                "tags": (metadata_changes.get("tags") if metadata_changes else dataset.ds_meta_data.tags),
+                "ds_metrics_id": dataset.ds_meta_data.ds_metrics_id,
+                "deposition_id": dataset.ds_meta_data.deposition_id,
+                "downloads": dataset.ds_meta_data.downloads,
+                "commit": False,
+            }
+
+            new_metadata = self.dsmetadata_repository.create(**metadata_values)
+
+            for author in dataset.ds_meta_data.authors:
+                new_author = self.author_repository.create(
+                    commit=False,
+                    ds_meta_data_id=new_metadata.id,
+                    name=author.name,
+                    affiliation=author.affiliation,
+                    orcid=author.orcid,
+                )
+                new_metadata.authors.append(new_author)
+
+            new_dataset = self.create(
+                commit=False,
+                user_id=current_user.id,
+                ds_meta_data_id=new_metadata.id,
+                version=dataset.version + 1,
+                previous_version_id=dataset.id,
+            )
+
+            self.repository.session.commit()
+
+            working_dir = os.getenv("WORKING_DIR", "")
+            old_dir = os.path.join(working_dir, "uploads", f"user_{current_user.id}", f"dataset_{dataset.id}")
+            new_dir = os.path.join(working_dir, "uploads", f"user_{current_user.id}", f"dataset_{new_dataset.id}")
+
+            os.makedirs(new_dir, exist_ok=True)
+
+            for csv_file in dataset.csv_files:
+                if csv_file.id not in files_to_delete:
+                    old_file_path = os.path.join(old_dir, csv_file.name)
+                    new_file_path = os.path.join(new_dir, csv_file.name)
+
+                    if os.path.exists(old_file_path):
+                        shutil.copy2(old_file_path, new_file_path)
+
+                        # Create new CSVFile entry
+                        checksum, size = calculate_checksum_and_size(new_file_path)
+                        new_csv_file = CSVFile(
+                            name=csv_file.name, checksum=checksum, size=size, dataset_id=new_dataset.id
+                        )
+                        new_dataset.csv_files.append(new_csv_file)
+
+            self.repository.session.commit()
+
+            return new_dataset
+
+        except Exception as exc:
+            logger.exception(f"Exception creating new dataset version: {exc}")
+            self.repository.session.rollback()
+            raise exc
+
+    def _convert_publication_type(self, value: str):
+        """Convert publication type string to enum"""
+        from app.modules.dataset.models import PublicationType
+
+        for pt in PublicationType:
+            if pt.value == value:
+                return pt
+        return PublicationType.NONE
+
 
 class AuthorService(BaseService):
     def __init__(self):
@@ -267,3 +385,94 @@ class SizeService:
             return f"{round(size / (1024 ** 2), 2)} MB"
         else:
             return f"{round(size / (1024 ** 3), 2)} GB"
+
+
+class DiffService:
+    """Service for generating diffs between file versions"""
+
+    @staticmethod
+    def get_file_diff(previous_file_path: str, current_file_path: str):
+        """
+        Generate a detailed diff between two CSV files.
+        Returns structured diff data with operation types: added, removed, context.
+        """
+        import difflib
+
+        try:
+            with open(previous_file_path, "r", encoding="utf-8") as f:
+                previous_lines = f.readlines()
+        except Exception as e:
+            logger.error(f"Error reading previous file: {e}")
+            previous_lines = []
+
+        try:
+            with open(current_file_path, "r", encoding="utf-8") as f:
+                current_lines = f.readlines()
+        except Exception as e:
+            logger.error(f"Error reading current file: {e}")
+            current_lines = []
+
+        # Use difflib to generate a unified diff
+        differ = difflib.unified_diff(previous_lines, current_lines, lineterm="")
+        diff_lines = list(differ)
+
+        # Parse the diff output into structured format
+        diff_data = DiffService._parse_unified_diff(diff_lines, previous_lines, current_lines)
+
+        return {
+            "previous_lines": len(previous_lines),
+            "current_lines": len(current_lines),
+            "diff": diff_data,
+        }
+
+    @staticmethod
+    def _parse_unified_diff(diff_lines, previous_lines, current_lines):
+        """
+        Parse unified diff format into a more usable structure.
+        Returns a list with structured diff information.
+        """
+        result = []
+        prev_idx = 0
+        curr_idx = 0
+
+        # Skip the header lines
+        for line in diff_lines[2:]:
+            if line.startswith("@@"):
+                continue
+
+            if line.startswith("-"):
+                # Removed line
+                line_content = line[1:]
+                result.append(
+                    {
+                        "type": "removed",
+                        "line_number": prev_idx + 1,
+                        "content": line_content,
+                    }
+                )
+                prev_idx += 1
+            elif line.startswith("+"):
+                # Added line
+                line_content = line[1:]
+                result.append(
+                    {
+                        "type": "added",
+                        "line_number": curr_idx + 1,
+                        "content": line_content,
+                    }
+                )
+                curr_idx += 1
+            else:
+                # Context line (unchanged)
+                result.append(
+                    {
+                        "type": "context",
+                        "previous_line_number": prev_idx + 1,
+                        "current_line_number": curr_idx + 1,
+                        "content": line[1:] if line.startswith(" ") else line,
+                    }
+                )
+                prev_idx += 1
+                curr_idx += 1
+
+        return result

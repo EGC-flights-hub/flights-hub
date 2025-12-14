@@ -1,0 +1,442 @@
+{% extends "base_template.html" %}
+
+{% block title %}Edit dataset{% endblock %}
+
+{% block content %}
+
+    <h1 class="h2 mb-3"><b>Edit</b> dataset - v{{ dataset.version }}</h1>
+
+    <div class="row">
+        <div class="col-12 mb-3">
+            <button onclick="window.history.back()" class="btn btn-secondary">
+                <i data-feather="arrow-left"></i>
+                Back to dataset
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="metadata-tab" data-bs-toggle="tab" data-bs-target="#metadata" type="button" role="tab" aria-controls="metadata" aria-selected="true">
+                        <i data-feather="edit-2"></i> Edit Metadata
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" type="button" role="tab" aria-controls="files" aria-selected="false">
+                        <i data-feather="file"></i> Manage Files
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="tab-content">
+        <!-- Metadata Tab -->
+        <div class="tab-pane fade show active" id="metadata" role="tabpanel" aria-labelledby="metadata-tab">
+            <div class="row">
+                <div class="col-xl-8 col-lg-12 col-md-12 col-sm-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="card-title">Edit Dataset Metadata</h3>
+                            
+                            <form id="metadataForm">
+                                <div class="mb-3">
+                                    <label class="form-label"><b>Title:</b></label>
+                                    <input type="text" class="form-control" id="titleInput" value="{{ dataset.ds_meta_data.title }}">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label"><b>Description:</b></label>
+                                    <textarea class="form-control" id="descriptionInput" rows="4">{{ dataset.ds_meta_data.description }}</textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label"><b>Publication Type:</b></label>
+                                            <select class="form-select" id="publicationTypeInput">
+                                                <option value="">-- Select publication type --</option>
+                                                {% for pt in form.publication_type.choices %}
+                                                    <option value="{{ pt[0] }}" {% if pt[0] == dataset.ds_meta_data.publication_type.value %}selected{% endif %}>
+                                                        {{ pt[1] }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label"><b>Publication DOI:</b></label>
+                                            <input type="text" class="form-control" id="publicationDoiInput" value="{{ dataset.ds_meta_data.publication_doi or '' }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label"><b>Tags (separated by commas):</b></label>
+                                    <input type="text" class="form-control" id="tagsInput" value="{{ dataset.ds_meta_data.tags or '' }}">
+                                </div>
+
+                                <hr>
+
+                                <div class="mb-3">
+                                    <label class="form-label"><b>Current Version:</b></label>
+                                    <p class="form-control-plaintext">{{ dataset.version }}</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label"><b>Created:</b></label>
+                                    <p class="form-control-plaintext">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                </div>
+
+                                <hr>
+
+                                <h5 class="mb-3">
+                                    <i data-feather="info"></i>
+                                    Note about editing
+                                </h5>
+                                <p class="text-muted">
+                                    When you edit the metadata, a new version will be created with your changes. 
+                                    The previous version will be preserved and users will be able to compare the differences 
+                                    between versions on the dataset page. Files remain the same unless you also manage them in the Files tab.
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Files Tab -->
+        <div class="tab-pane fade" id="files" role="tabpanel" aria-labelledby="files-tab">
+            <div class="row">
+                <div class="col-xl-8 col-lg-12 col-md-12 col-sm-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="card-title">Current Files</h3>
+                            
+                            <div id="currentFilesList" class="list-group mt-3">
+                                {% for file in dataset.csv_files %}
+                                <div class="list-group-item" id="file-item-{{ file.id }}">
+                                    <div class="row align-items-center">
+                                        <div class="col-auto">
+                                            <input type="checkbox" class="form-check-input file-delete-checkbox" 
+                                                   value="{{ file.id }}" data-file-name="{{ file.name }}">
+                                        </div>
+                                        <div class="col">
+                                            <div>
+                                                <i data-feather="file"></i>
+                                                <strong>{{ file.name }}</strong>
+                                            </div>
+                                            <small class="text-muted">({{ file.get_formatted_size() }})</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            {% if dataset.csv_files %}
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="deleteSelectedFiles()">
+                                    <i data-feather="trash-2"></i>
+                                    Delete Selected Files
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Add New Files</h3>
+
+                    <p class="text-muted mb-3">Upload new CSV files to create a new version of this dataset. Files will be added to the next version.</p>
+
+                    <div class="alert alert-info" role="alert">
+                        <i data-feather="info"></i> <strong>Note:</strong> When you click "Create New Version", all changes will be saved and a new version will be created.
+                    </div>
+
+                    <form action="{{ url_for('dataset.upload') }}" class="dropzone" id="myDropzone">
+                        <div id="dropzone-text">
+                            <p>Drop CSV files here or click to select</p>
+                        </div>
+                    </form>
+
+                    <span class="text-danger" id="alerts" style="display: none"></span>
+
+                    <ul class="mt-2 list-group" id="file-list"></ul>
+
+                    <script>
+                        // GLOBAL variables declared at window level so they're accessible everywhere
+                        window.filesToDelete = [];
+                        window.uploadedFileCount = 0;
+                        
+                        let dropzone = Dropzone.options.myDropzone = {
+                            url: "/dataset/file/upload",
+                            paramName: 'file',
+                            maxFilesize: 10,
+                            acceptedFiles: '.csv',
+                            init: function () {
+                                let fileList = document.getElementById('file-list');
+                                let dropzoneText = document.getElementById('dropzone-text');
+                                let alerts = document.getElementById('alerts');
+
+                                this.on('addedfile', function (file) {
+                                    let ext = file.name.split('.').pop();
+                                    if (ext !== 'csv') {
+                                        this.removeFile(file);
+                                        let alert = document.createElement('p');
+                                        alert.textContent = 'Invalid file extension: ' + file.name;
+                                        alerts.appendChild(alert);
+                                        alerts.style.display = 'block';
+                                    }
+                                });
+
+                                this.on('success', function (file, response) {
+                                    console.log("File uploaded: ", response);
+
+                                    let listItem = document.createElement('li');
+                                    listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                                    listItem.id = 'upload-' + response.filename;
+
+                                    let span = document.createElement('span');
+                                    let badge = document.createElement('span');
+                                    badge.className = 'badge bg-success';
+                                    badge.textContent = 'New';
+                                    span.appendChild(badge);
+
+                                    let nameSpan = document.createElement('span');
+                                    nameSpan.textContent = ' ' + response.filename;
+                                    span.appendChild(nameSpan);
+
+                                    listItem.appendChild(span);
+
+                                    let removeButton = document.createElement('button');
+                                    removeButton.innerHTML = '<i data-feather="trash-2"></i>';
+                                    removeButton.classList.add("btn", "btn-sm", "btn-outline-danger");
+                                    removeButton.style.borderRadius = '5px';
+                                    removeButton.type = 'button';
+
+                                    removeButton.addEventListener('click', function () {
+                                        fileList.removeChild(listItem);
+                                        this.removeFile(file);
+                                        window.uploadedFileCount--;
+                                        let xhr = new XMLHttpRequest();
+                                        xhr.open('POST', '/dataset/file/delete', true);
+                                        xhr.setRequestHeader('Content-Type', 'application/json');
+                                        xhr.send(JSON.stringify({file: file.name}));
+                                        
+                                        checkForChanges();
+                                    }.bind(this));
+
+                                    listItem.appendChild(removeButton);
+                                    fileList.appendChild(listItem);
+                                    
+                                    window.uploadedFileCount++;
+
+                                    // Show update button
+                                    checkForChanges();
+                                    feather.replace();
+                                });
+                            }
+                        };
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <button type="button" class="btn btn-primary btn-lg" id="updateButton" 
+                    onclick="submitUpdate()" style="display: none;">
+                <i data-feather="save"></i>
+                Create New Version
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOMContentLoaded - Initializing edit_dataset page');
+            feather.replace();
+            
+            // RESET global state variables when page loads
+            window.filesToDelete = [];
+            window.uploadedFileCount = 0;
+            
+            // Store original values at page load time
+            window.originalValues = {
+                title: document.getElementById('titleInput').value,
+                description: document.getElementById('descriptionInput').value,
+                publicationType: document.getElementById('publicationTypeInput').value,
+                publicationDoi: document.getElementById('publicationDoiInput').value,
+                tags: document.getElementById('tagsInput').value
+            };
+            
+            console.log('Original values:', window.originalValues);
+            console.log('Reset variables:', window.filesToDelete, window.uploadedFileCount);
+            
+            // Clear file list UI
+            document.getElementById('file-list').innerHTML = '';
+            
+            // Listen for metadata changes
+            document.getElementById('titleInput').addEventListener('input', checkForChanges);
+            document.getElementById('descriptionInput').addEventListener('input', checkForChanges);
+            document.getElementById('publicationTypeInput').addEventListener('change', checkForChanges);
+            document.getElementById('publicationDoiInput').addEventListener('input', checkForChanges);
+            document.getElementById('tagsInput').addEventListener('input', checkForChanges);
+            
+            // Initial check
+            checkForChanges();
+        });
+
+        function checkForChanges() {
+            const hasDeletedFiles = window.filesToDelete && window.filesToDelete.length > 0;
+            const hasNewFiles = window.uploadedFileCount && window.uploadedFileCount > 0;
+            const hasMetadataChanges = hasMetadataChanged();
+            
+            console.log('checkForChanges:', {hasDeletedFiles, hasNewFiles, hasMetadataChanges});
+            
+            if (hasDeletedFiles || hasNewFiles || hasMetadataChanges) {
+                document.getElementById('updateButton').style.display = 'block';
+                console.log('Showing update button');
+            } else {
+                document.getElementById('updateButton').style.display = 'none';
+                console.log('Hiding update button');
+            }
+        }
+
+        function hasMetadataChanged() {
+            const currentTitle = document.getElementById('titleInput').value;
+            const currentDescription = document.getElementById('descriptionInput').value;
+            const currentPublicationType = document.getElementById('publicationTypeInput').value;
+            const currentPublicationDoi = document.getElementById('publicationDoiInput').value;
+            const currentTags = document.getElementById('tagsInput').value;
+
+            const changed = (
+                currentTitle !== window.originalValues.title ||
+                currentDescription !== window.originalValues.description ||
+                currentPublicationType !== window.originalValues.publicationType ||
+                currentPublicationDoi !== window.originalValues.publicationDoi ||
+                currentTags !== window.originalValues.tags
+            );
+            
+            if (changed) {
+                console.log('Metadata has changed:', {
+                    title: currentTitle !== window.originalValues.title,
+                    description: currentDescription !== window.originalValues.description,
+                    publicationType: currentPublicationType !== window.originalValues.publicationType,
+                    publicationDoi: currentPublicationDoi !== window.originalValues.publicationDoi,
+                    tags: currentTags !== window.originalValues.tags
+                });
+            }
+            
+            return changed;
+        }
+
+        function deleteSelectedFiles() {
+            const checkboxes = document.querySelectorAll('.file-delete-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('Please select at least one file to delete');
+                return;
+            }
+
+            if (confirm('Are you sure you want to delete these files?')) {
+                window.filesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
+                console.log('Files marked for deletion:', window.filesToDelete);
+                
+                checkboxes.forEach(cb => {
+                    const item = document.getElementById(`file-item-${cb.value}`);
+                    if (item) {
+                        item.style.opacity = '0.5';
+                        item.style.textDecoration = 'line-through';
+                    }
+                });
+
+                checkForChanges();
+            }
+        }
+
+        function submitUpdate() {
+            const datasetId = {{ dataset.id }};
+            
+            // Collect metadata changes
+            const metadataChanges = {
+                title: document.getElementById('titleInput').value,
+                description: document.getElementById('descriptionInput').value,
+                publication_type: document.getElementById('publicationTypeInput').value,
+                publication_doi: document.getElementById('publicationDoiInput').value,
+                tags: document.getElementById('tagsInput').value,
+            };
+            
+            // Check if there are any changes
+            const hasDeletedFiles = window.filesToDelete && window.filesToDelete.length > 0;
+            const hasNewFiles = window.uploadedFileCount && window.uploadedFileCount > 0;
+            const hasMetadataChanges = hasMetadataChanged();
+            
+            if (!hasDeletedFiles && !hasNewFiles && !hasMetadataChanges) {
+                alert('Please make at least one change');
+                return;
+            }
+
+            const changesSummary = [];
+            if (hasMetadataChanges) {
+                changesSummary.push('Metadata will be updated');
+            }
+            if (hasDeletedFiles) {
+                changesSummary.push(`${window.filesToDelete.length} file(s) will be deleted`);
+            }
+            if (hasNewFiles) {
+                changesSummary.push(`${window.uploadedFileCount} new file(s) will be added`);
+            }
+
+            const confirmMessage = `This will create a new version of the dataset:\n\n${changesSummary.join('\n')}\n\nContinue?`;
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            const updateButton = document.getElementById('updateButton');
+            updateButton.disabled = true;
+            updateButton.innerHTML = '<i data-feather="loader"></i> Creating version...';
+
+            // Prepare the request
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `/dataset/${datasetId}/update`, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    alert(`Dataset updated successfully!\nNew version: v${response.version}`);
+                    window.location.href = `/dataset/list`;
+                } else {
+                    const error = JSON.parse(xhr.responseText);
+                    alert(`Error: ${error.error || 'Unknown error'}`);
+                    updateButton.disabled = false;
+                    updateButton.innerHTML = '<i data-feather="save"></i> Create New Version';
+                }
+            };
+
+            xhr.onerror = function () {
+                alert('Error updating dataset');
+                updateButton.disabled = false;
+                updateButton.innerHTML = '<i data-feather="save"></i> Create New Version';
+            };
+
+            xhr.send(JSON.stringify({
+                files_to_delete: window.filesToDelete,
+                metadata: metadataChanges
+            }));
+        }
+    </script>
+
+{% endblock %}

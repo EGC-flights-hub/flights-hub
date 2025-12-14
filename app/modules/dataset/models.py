@@ -98,9 +98,12 @@ class DataSet(db.Model):
 
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey("ds_meta_data.id"), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    version = db.Column(db.Integer, nullable=False, default=1)
+    previous_version_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), nullable=True)
 
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
     csv_files = db.relationship("CSVFile", backref="data_set", lazy=True, cascade="all, delete")
+    previous_version = db.relationship("DataSet", remote_side=[id], backref="next_version")
 
     def name(self):
         return self.ds_meta_data.title
@@ -132,7 +135,7 @@ class DataSet(db.Model):
     def get_dataset_doi(self):
         if self.ds_meta_data.dataset_doi:
             return f"/doi/{self.ds_meta_data.dataset_doi}/"
-        return None
+        return f"/dataset/unsynchronized/{self.id}/"
 
     def to_dict(self):
         return {
@@ -148,6 +151,7 @@ class DataSet(db.Model):
             "tags": self.ds_meta_data.tags.split(",") if self.ds_meta_data.tags else [],
             "url": self.get_dataset_doi(),
             "download": f'{request.host_url.rstrip("/")}/dataset/download/{self.id}',
+            "version": self.version,
             "zenodo": self.get_zenodo_url(),
             "files": [file.to_dict() for file in self.csv_files],
             "files_count": self.get_files_count(),
@@ -158,6 +162,81 @@ class DataSet(db.Model):
 
     def __repr__(self):
         return f"DataSet<{self.id}>"
+
+    def get_all_previous_versions(self):
+        """Get all previous versions in chronological order (oldest to newest)"""
+        versions = []
+        current = self.previous_version
+        while current:
+            versions.append(current)
+            current = current.previous_version
+        return versions
+
+    def get_all_versions(self):
+        """Get all versions including this one, in chronological order (oldest to newest)"""
+        # Get all previous versions (oldest to newest, excluding current)
+        previous = self.get_all_previous_versions()
+        # Return previous versions + current version
+        return previous + [self]
+
+    def compare_with_version(self, other_version=None):
+        if other_version is None:
+            other_version = self.previous_version
+
+        if not other_version:
+            return None
+
+        previous_files = {file.name: file for file in other_version.csv_files}
+        current_files = {file.name: file for file in self.csv_files}
+
+        added_files = [file.to_dict() for name, file in current_files.items() if name not in previous_files]
+        removed_files = [file.to_dict() for name, file in previous_files.items() if name not in current_files]
+        modified_files = [
+            {
+                "name": name,
+                "previous": previous_files[name].to_dict(),
+                "current": current_files[name].to_dict(),
+            }
+            for name in current_files.keys() & previous_files.keys()
+            if current_files[name].checksum != previous_files[name].checksum
+        ]
+
+        return {
+            "added": added_files,
+            "removed": removed_files,
+            "modified": modified_files,
+        }
+
+    def compare_metadata_with_version(self, other_version=None):
+        if other_version is None:
+            other_version = self.previous_version
+
+        if not other_version:
+            return None
+
+        changes = {}
+        fields_to_compare = ["title", "description", "publication_type", "publication_doi", "tags"]
+
+        for field in fields_to_compare:
+            current_value = getattr(self.ds_meta_data, field)
+            previous_value = getattr(other_version.ds_meta_data, field)
+            if current_value != previous_value:
+                if isinstance(current_value, PublicationType):
+                    current_serialized = current_value.value
+                else:
+                    current_serialized = current_value
+
+                if isinstance(previous_value, PublicationType):
+                    previous_serialized = previous_value.value
+                else:
+                    previous_serialized = previous_value
+
+                changes[field] = {
+                    "previous": previous_serialized,
+                    "current": current_serialized,
+                }
+
+        return changes
 
 
 class DSDownloadRecord(db.Model):

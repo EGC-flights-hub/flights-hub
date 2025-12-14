@@ -35,15 +35,31 @@ def show_signup_form():
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
+
     if current_user.is_authenticated:
         return redirect(url_for("public.index"))
 
     form = LoginForm()
+
     if request.method == "POST" and form.validate_on_submit():
-        if authentication_service.login(form.email.data, form.password.data):
+        remember = getattr(form, "remember", None)
+        remember_val = bool(remember.data) if remember is not None else True
+
+        ok = authentication_service.login(form.email.data, form.password.data, remember=remember_val)
+        if ok:
             return redirect(url_for("public.index"))
 
-        return render_template("auth/login_form.html", form=form, error="Invalid credentials")
+        err_code = authentication_service.error_code or "invalid_credentials"
+        err_msg = authentication_service.error_message or "Unable to sign in."
+        remaining = getattr(authentication_service, "remaining_attempts", None)
+        status = 429 if err_code == "too_many_failed_attempts" else 401
+
+        return (
+            render_template(
+                "auth/login_form.html", form=form, error=err_msg, error_code=err_code, remaining_attempts=remaining
+            ),
+            status,
+        )
 
     return render_template("auth/login_form.html", form=form)
 

@@ -1,16 +1,17 @@
 """Initial schema with CSV file support
 
 Revision ID: 001
-Revises: 
+Revises:
 Create Date: 2025-11-19 21:00:00.000000
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '001'
+revision = "001"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -18,129 +19,194 @@ depends_on = None
 
 def upgrade():
     # Create user table
-    op.create_table('user',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('email', sa.String(length=120), nullable=False),
-    sa.Column('password', sa.String(length=255), nullable=False),
-    sa.Column('active', sa.Boolean(), nullable=False, server_default='1'),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email')
+    op.create_table(
+        "user",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("email", sa.String(length=120), nullable=False),
+        sa.Column("password", sa.String(length=255), nullable=False),
+        sa.Column("active", sa.Boolean(), nullable=False, server_default="1"),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("email"),
     )
 
     # Create user_profile table
-    op.create_table('user_profile',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=100), nullable=False),
-    sa.Column('surname', sa.String(length=100), nullable=False),
-    sa.Column('affiliation', sa.String(length=100), nullable=True),
-    sa.Column('orcid', sa.String(length=19), nullable=True),
-    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('user_id')
+    op.create_table(
+        "user_profile",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("name", sa.String(length=100), nullable=False),
+        sa.Column("surname", sa.String(length=100), nullable=False),
+        sa.Column("affiliation", sa.String(length=100), nullable=True),
+        sa.Column("orcid", sa.String(length=19), nullable=True),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["user.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("user_id"),
     )
 
     # Create ds_metrics table
-    op.create_table('ds_metrics',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('number_of_models', sa.String(length=120), nullable=True),
-    sa.Column('number_of_features', sa.String(length=120), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "ds_metrics",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("number_of_models", sa.String(length=120), nullable=True),
+        sa.Column("number_of_features", sa.String(length=120), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
     )
 
     # Create ds_meta_data table
-    op.create_table('ds_meta_data',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('deposition_id', sa.Integer(), nullable=True),
-    sa.Column('title', sa.String(length=120), nullable=False),
-    sa.Column('description', sa.Text(), nullable=False),
-    sa.Column('publication_type', sa.Enum('NONE', 'ANNOTATION_COLLECTION', 'BOOK', 'BOOK_SECTION', 'CONFERENCE_PAPER', 'DATA_MANAGEMENT_PLAN', 'JOURNAL_ARTICLE', 'PATENT', 'PREPRINT', 'PROJECT_DELIVERABLE', 'PROJECT_MILESTONE', 'PROPOSAL', 'REPORT', 'SOFTWARE_DOCUMENTATION', 'TAXONOMIC_TREATMENT', 'TECHNICAL_NOTE', 'THESIS', 'WORKING_PAPER', 'OTHER', name='publicationtype'), nullable=False),
-    sa.Column('publication_doi', sa.String(length=120), nullable=True),
-    sa.Column('dataset_doi', sa.String(length=120), nullable=True),
-    sa.Column('tags', sa.String(length=120), nullable=True),
-    sa.Column('ds_metrics_id', sa.Integer(), nullable=True),
-    sa.Column('downloads', sa.Integer(), nullable=False, server_default='0'),
-    sa.ForeignKeyConstraint(['ds_metrics_id'], ['ds_metrics.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "ds_meta_data",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("deposition_id", sa.Integer(), nullable=True),
+        sa.Column("title", sa.String(length=120), nullable=False),
+        sa.Column("description", sa.Text(), nullable=False),
+        sa.Column(
+            "publication_type",
+            sa.Enum(
+                "NONE",
+                "ANNOTATION_COLLECTION",
+                "BOOK",
+                "BOOK_SECTION",
+                "CONFERENCE_PAPER",
+                "DATA_MANAGEMENT_PLAN",
+                "JOURNAL_ARTICLE",
+                "PATENT",
+                "PREPRINT",
+                "PROJECT_DELIVERABLE",
+                "PROJECT_MILESTONE",
+                "PROPOSAL",
+                "REPORT",
+                "SOFTWARE_DOCUMENTATION",
+                "TAXONOMIC_TREATMENT",
+                "TECHNICAL_NOTE",
+                "THESIS",
+                "WORKING_PAPER",
+                "OTHER",
+                name="publicationtype",
+            ),
+            nullable=False,
+        ),
+        sa.Column("publication_doi", sa.String(length=120), nullable=True),
+        sa.Column("dataset_doi", sa.String(length=120), nullable=True),
+        sa.Column("tags", sa.String(length=120), nullable=True),
+        sa.Column("ds_metrics_id", sa.Integer(), nullable=True),
+        sa.Column("downloads", sa.Integer(), nullable=False, server_default="0"),
+        sa.ForeignKeyConstraint(
+            ["ds_metrics_id"],
+            ["ds_metrics.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
 
     # Create author table
-    op.create_table('author',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=120), nullable=False),
-    sa.Column('affiliation', sa.String(length=120), nullable=True),
-    sa.Column('orcid', sa.String(length=120), nullable=True),
-    sa.Column('ds_meta_data_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['ds_meta_data_id'], ['ds_meta_data.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "author",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("name", sa.String(length=120), nullable=False),
+        sa.Column("affiliation", sa.String(length=120), nullable=True),
+        sa.Column("orcid", sa.String(length=120), nullable=True),
+        sa.Column("ds_meta_data_id", sa.Integer(), nullable=True),
+        sa.ForeignKeyConstraint(
+            ["ds_meta_data_id"],
+            ["ds_meta_data.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
 
     # Create data_set table
-    op.create_table('data_set',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('ds_meta_data_id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['ds_meta_data_id'], ['ds_meta_data.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "data_set",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("ds_meta_data_id", sa.Integer(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["ds_meta_data_id"],
+            ["ds_meta_data.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["user.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
 
     # Create csv_file table
-    op.create_table('csv_file',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=120), nullable=False),
-    sa.Column('checksum', sa.String(length=120), nullable=False),
-    sa.Column('size', sa.Integer(), nullable=False),
-    sa.Column('dataset_id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['dataset_id'], ['data_set.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "csv_file",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("name", sa.String(length=120), nullable=False),
+        sa.Column("checksum", sa.String(length=120), nullable=False),
+        sa.Column("size", sa.Integer(), nullable=False),
+        sa.Column("dataset_id", sa.Integer(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["dataset_id"],
+            ["data_set.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
 
     # Create ds_download_record table
-    op.create_table('ds_download_record',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.Column('dataset_id', sa.Integer(), nullable=True),
-    sa.Column('download_date', sa.DateTime(), nullable=False),
-    sa.Column('download_cookie', sa.String(length=36), nullable=False),
-    sa.ForeignKeyConstraint(['dataset_id'], ['data_set.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "ds_download_record",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=True),
+        sa.Column("dataset_id", sa.Integer(), nullable=True),
+        sa.Column("download_date", sa.DateTime(), nullable=False),
+        sa.Column("download_cookie", sa.String(length=36), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["dataset_id"],
+            ["data_set.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["user.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
 
     # Create ds_view_record table
-    op.create_table('ds_view_record',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.Column('dataset_id', sa.Integer(), nullable=True),
-    sa.Column('view_date', sa.DateTime(), nullable=False),
-    sa.Column('view_cookie', sa.String(length=36), nullable=False),
-    sa.ForeignKeyConstraint(['dataset_id'], ['data_set.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "ds_view_record",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=True),
+        sa.Column("dataset_id", sa.Integer(), nullable=True),
+        sa.Column("view_date", sa.DateTime(), nullable=False),
+        sa.Column("view_cookie", sa.String(length=36), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["dataset_id"],
+            ["data_set.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["user.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
 
     # Create doi_mapping table
-    op.create_table('doi_mapping',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('dataset_doi_old', sa.String(length=120), nullable=True),
-    sa.Column('dataset_doi_new', sa.String(length=120), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "doi_mapping",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("dataset_doi_old", sa.String(length=120), nullable=True),
+        sa.Column("dataset_doi_new", sa.String(length=120), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
     )
 
 
 def downgrade():
-    op.drop_table('doi_mapping')
-    op.drop_table('ds_view_record')
-    op.drop_table('ds_download_record')
-    op.drop_table('csv_file')
-    op.drop_table('data_set')
-    op.drop_table('author')
-    op.drop_table('ds_meta_data')
-    op.drop_table('ds_metrics')
-    op.drop_table('user_profile')
-    op.drop_table('user')
+    op.drop_table("doi_mapping")
+    op.drop_table("ds_view_record")
+    op.drop_table("ds_download_record")
+    op.drop_table("csv_file")
+    op.drop_table("data_set")
+    op.drop_table("author")
+    op.drop_table("ds_meta_data")
+    op.drop_table("ds_metrics")
+    op.drop_table("user_profile")
+    op.drop_table("user")

@@ -44,7 +44,13 @@ class DSMetaDataRepository(BaseRepository):
         super().__init__(DSMetaData)
 
     def filter_by_doi(self, doi: str) -> Optional[DSMetaData]:
-        return self.model.query.filter_by(dataset_doi=doi).first()
+        # Get the most recent version by joining with DataSet and filtering by latest version
+        return (
+            self.model.query.join(DataSet, self.model.id == DataSet.ds_meta_data_id)
+            .filter(self.model.dataset_doi == doi)
+            .filter(~DataSet.next_version.any())  # Only get the latest version
+            .first()
+        )
 
 
 class DSViewRecordRepository(BaseRepository):
@@ -82,6 +88,7 @@ class DataSetRepository(BaseRepository):
         return (
             self.model.query.join(DSMetaData)
             .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_doi.isnot(None))
+            .filter(~self.model.next_version.any())  # Only get latest versions
             .order_by(self.model.created_at.desc())
             .all()
         )
@@ -90,15 +97,14 @@ class DataSetRepository(BaseRepository):
         return (
             self.model.query.join(DSMetaData)
             .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_doi.is_(None))
+            .filter(~self.model.next_version.any())  # Only get latest versions
             .order_by(self.model.created_at.desc())
             .all()
         )
 
     def get_unsynchronized_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
         return (
-            self.model.query.join(DSMetaData)
-            .filter(DataSet.user_id == current_user_id, DataSet.id == dataset_id, DSMetaData.dataset_doi.is_(None))
-            .first()
+            self.model.query.join(DSMetaData).filter(DataSet.id == dataset_id, DSMetaData.dataset_doi.is_(None)).first()
         )
 
     def count_synchronized_datasets(self):
@@ -110,7 +116,7 @@ class DataSetRepository(BaseRepository):
     def latest_synchronized(self):
         return (
             self.model.query.join(DSMetaData)
-            .filter(DSMetaData.dataset_doi.isnot(None))
+            .filter(~self.model.next_version.any())  # Only get latest versions
             .order_by(desc(self.model.id))
             .limit(5)
             .all()

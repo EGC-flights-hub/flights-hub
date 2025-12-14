@@ -18,6 +18,7 @@
                             <th>Description</th>
                             <th>Publication type</th>
                             <th>Dataset DOI</th>
+			    <th>Version</th>
 			    <th>Downloads</th>
                             <th>Options</th>
                         </tr>
@@ -34,6 +35,7 @@
                                 <td>{{ dataset.ds_meta_data.publication_type.name.replace('_', ' ').title() }}</td>
                                 <td><a href="{{ dataset.get_dataset_doi() }}"
                                        target="_blank">{{ dataset.get_dataset_doi() }}</a></td>
+				<td><span class="badge bg-info">v{{ dataset.version }}</span></td>
 				<td>{{ dataset.ds_meta_data.downloads }}</td>
                                 <td>
                                     <a href="{{ dataset.get_dataset_doi() }}">
@@ -86,6 +88,7 @@
                                     <th>Title</th>
                                     <th>Description</th>
                                     <th>Publication type</th>
+                                    <th>Version</th>
                                     <th>Options</th>
                                 </tr>
                                 </thead>
@@ -99,6 +102,7 @@
                                         </td>
                                         <td>{{ local_dataset.ds_meta_data.description }}</td>
                                         <td>{{ local_dataset.ds_meta_data.publication_type.name.replace('_', ' ').title() }}</td>
+                                        <td><span class="badge bg-info">v{{ local_dataset.version }}</span></td>
                                         <td>
                                             <a href="{{ url_for('dataset.get_unsynchronized_dataset', dataset_id=local_dataset.id) }}">
                                                 <i data-feather="eye"></i>
