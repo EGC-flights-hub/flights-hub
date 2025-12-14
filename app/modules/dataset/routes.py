@@ -333,8 +333,8 @@ def dataset_badge(dataset_id):
     total_width = left_width + right_width
 
     svg = f"""\
-<svg xmlns="http://www.w3.org/2000/svg" width="{total_width}" 
-height="{height}" role="img" aria-label="{label} downloads">
+<svg xmlns="http://www.w3.org/2000/svg" width="{total_width}"
+ height="{height}" role="img" aria-label="{label} downloads">
     <defs>
         <linearGradient id="badge-glow" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#0ea5e9"/>
