@@ -34,6 +34,13 @@
         executable: /bin/bash
       environment: "{{ common_environment }}"
 
+    - name: Stop Flask instances previously in execution
+      ansible.builtin.shell: "pkill -f 'python3 -m flask run --host=0.0.0.0'"
+      become: yes
+      become_user: vagrant
+      failed_when: false # CRITICAL: Ignore the error if pkill does not find it.
+      tags: [app, run]
+
     - name: Run Flask application
       shell: |
         source {{ working_dir }}vagrant_venv/bin/activate
@@ -44,3 +51,9 @@
       environment: "{{ common_environment }}"
       async: 1
       poll: 0
+
+    - name: Show access message
+      ansible.builtin.debug:
+        msg: "✅ Provisioning COMPLETE! The Flask application is running in the background. Access it at http://localhost:5001"
+      tags: [app, run]
+
