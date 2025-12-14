@@ -1,4 +1,4 @@
-# Diario de equipo de fligths hub
+# Diario de equipo de flights hub
 
 ## Incidencias 
 
@@ -6,7 +6,7 @@
 
 - Las ramas de desarrollo no eran borradas tras la finalización de su tiempo de vida, además este era muy largo. Se han tomado medidas correctivas, creando ramas más atómicas y eliminando estas cuando cumplen su objetivo. Además se han documentado la norma en el Acta Fundacional ya que esta no estaba incluida en la gestión de ramas. 
 
-- Hay ciertas vulnerabilidades y ciertos hotspots del código base de UVL cuya solución rompen el correcto funcionamiento de la aplicación. Se ha documentado la solución en el Acta Fundacinal.
+- Hay ciertas vulnerabilidades y ciertos hotspots del código base de UVL cuya solución rompen el correcto funcionamiento de la aplicación. Se ha documentado la solución en el Acta Fundacional.
 
 - La documentación no era accesible para nadie externo al proyecto, lo que dificulta las tareas de corrección y entendimiento del proyecto. Se han pasado a .md los documentos y subido a github para solucionarlo.
 
