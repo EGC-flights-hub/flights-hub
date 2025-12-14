@@ -327,27 +327,32 @@ def dataset_badge(dataset_id):
     label = xml_escape(dataset_name)
     value = f"{downloads:,}"
 
-    left_width = max(60, len(label) * 6 + 20)
-    right_width = len(value) * 7 + 20
+    left_width = max(90, len(label) * 7 + 30)
+    right_width = max(70, len(value) * 8 + 26)
+    height = 28
     total_width = left_width + right_width
 
     svg = f"""\
-<svg xmlns="http://www.w3.org/2000/svg" width="{total_width}" height="20">
-  <linearGradient id="a" x2="0" y2="100%">
-    <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
-    <stop offset="1" stop-opacity=".1"/>
-  </linearGradient>
+<svg xmlns="http://www.w3.org/2000/svg" width="{total_width}" height="{height}" role="img" aria-label="{label} downloads">
+    <defs>
+        <linearGradient id="badge-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0ea5e9"/>
+            <stop offset="100%" stop-color="#14b8a6"/>
+        </linearGradient>
+        <linearGradient id="badge-fill" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#111827"/>
+            <stop offset="100%" stop-color="#0b1220"/>
+        </linearGradient>
+    </defs>
 
-  <rect rx="3" width="{total_width}" height="20" fill="#555"/>
-  <rect rx="3" x="{left_width}" width="{right_width}" height="20" fill="#4c1"/>
-  <path fill="#4c1" d="M{left_width} 0h4v20h-4z"/>
-  <rect rx="3" width="{total_width}" height="20" fill="url(#a)"/>
+    <rect width="{total_width}" height="{height}" rx="8" fill="url(#badge-fill)" stroke="#0ea5e9" stroke-width="1"/>
+    <rect x="{left_width}" width="{right_width}" height="{height}" rx="8" fill="url(#badge-glow)"/>
+    <line x1="{left_width}" y1="1" x2="{left_width}" y2="{height - 1}" stroke="#0ea5e9" stroke-opacity="0.35"/>
 
-  <g fill="#fff" text-anchor="middle"
-     font-family="Verdana" font-size="11">
-    <text x="{left_width/2}" y="14">{label}</text>
-    <text x="{left_width + right_width/2}" y="14">{value}</text>
-  </g>
+    <g fill="#e2e8f0" text-anchor="middle" font-family="Segoe UI, Ubuntu, Helvetica, sans-serif" font-size="12" font-weight="600">
+        <text x="{left_width/2}" y="{height/2 + 4}">{label}</text>
+        <text x="{left_width + right_width/2}" y="{height/2 + 4}" fill="#0b1220">{value}</text>
+    </g>
 </svg>
 """
 
