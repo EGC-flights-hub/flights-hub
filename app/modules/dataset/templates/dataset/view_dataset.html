@@ -192,16 +192,14 @@
                     </span>
                 </button>
 
-                <div id="dataset_doi_uvlhub" style="display: none">
-                    {{ dataset.get_dataset_doi() }}
+                <div class="mt-3">
+                    <button class="btn btn-light btn-sm" onclick="copyBadge('md')">
+                        <i data-feather="clipboard"></i> Copy Markdown Badge
+                    </button>
+                    <button class="btn btn-light btn-sm" onclick="copyBadge('html')">
+                        <i data-feather="clipboard"></i> Copy HTML Badge
+                    </button>
                 </div>
-
-                <button class="btn btn-light btn-sm" onclick="copyBadge('md')">
-                    <i data-feather="clipboard"></i> Copy Markdown Badge
-                </button>
-                <button class="btn btn-light btn-sm" onclick="copyBadge('html')">
-                    <i data-feather="clipboard"></i> Copy HTML Badge
-                </button>
 
             </div>
             {% endif %}

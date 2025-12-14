@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from zipfile import ZipFile
 
 from flask import (
+    Response,
     abort,
     jsonify,
     make_response,
@@ -307,39 +308,68 @@ def get_unsynchronized_dataset(dataset_id):
     return render_template("dataset/view_dataset.html", dataset=dataset, related_datasets=related_datasets)
 
 
-@dataset_bp.route("/dataset/<int:dataset_id>/badge/md", methods=["GET"])
-def dataset_badge_md(dataset_id):
-    """
-    Genera un badge dinámico en .md mediante shields.io
-    """
+def xml_escape(text: str) -> str:
+    return (
+        text.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+        .replace("'", "&apos;")
+    )
+
+
+@dataset_bp.route("/dataset/<int:dataset_id>/badge.svg")
+def dataset_badge(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
+    dataset_name = dataset.ds_meta_data.title
+    downloads = dataset.ds_meta_data.downloads
 
-    # Pick up the data for the badge
-    name = dataset.name().replace(" ", "_")
-    downloads = dataset.to_dict()["downloads"]
+    label = xml_escape(dataset_name)
+    value = f"{downloads:,}"
 
-    badge = f"![Static Badge](https://img.shields.io/badge/{name}-{downloads}-green?style=for-the-badge)"
+    left_width = max(60, len(label) * 6 + 20)
+    right_width = len(value) * 7 + 20
+    total_width = left_width + right_width
 
-    return badge, 200, {"Content-Type": "text/plain"}
+    svg = f"""\
+<svg xmlns="http://www.w3.org/2000/svg" width="{total_width}" height="20">
+  <linearGradient id="a" x2="0" y2="100%">
+    <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
+    <stop offset="1" stop-opacity=".1"/>
+  </linearGradient>
+
+  <rect rx="3" width="{total_width}" height="20" fill="#555"/>
+  <rect rx="3" x="{left_width}" width="{right_width}" height="20" fill="#4c1"/>
+  <path fill="#4c1" d="M{left_width} 0h4v20h-4z"/>
+  <rect rx="3" width="{total_width}" height="20" fill="url(#a)"/>
+
+  <g fill="#fff" text-anchor="middle"
+     font-family="Verdana" font-size="11">
+    <text x="{left_width/2}" y="14">{label}</text>
+    <text x="{left_width + right_width/2}" y="14">{value}</text>
+  </g>
+</svg>
+"""
+
+    response = Response(svg, mimetype="image/svg+xml")
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
-@dataset_bp.route("/dataset/<int:dataset_id>/badge/html", methods=["GET"])
-def dataset_badge_html(dataset_id):
-    """
-    Genera un badge dinámico en html mediante shields.io
-    """
-    dataset = dataset_service.get_or_404(dataset_id)
+@dataset_bp.route("/dataset/<int:dataset_id>/badge/<badge_type>")
+def copyable_badge(dataset_id, badge_type):
+    base_url = request.host_url.rstrip("/")
+    svg_url = f"{base_url}/dataset/{dataset_id}/badge.svg"
 
-    # Pick up the data for the badge
-    name = dataset.name().replace(" ", "_")
-    downloads = dataset.to_dict()["downloads"]
+    if badge_type == "md":
+        return f"![Dataset downloads]({svg_url})", 200, {"Content-Type": "text/plain; charset=utf-8"}
 
-    link = f"https://img.shields.io/badge/{name}-{downloads}-green?style=for-the-badge"
-    title = '"Static Badge"'
+    if badge_type == "html":
+        return f'<img src="{svg_url}" alt="Dataset downloads">', 200, {"Content-Type": "text/plain; charset=utf-8"}
 
-    badge = f"<img alt={title} src = {link}>"
-
-    return badge, 200, {"Content-Type": "text/plain"}
+    return "Invalid badge type", 400
 
 
 @dataset_bp.route("/csvfile/download/<int:file_id>", methods=["GET"])
