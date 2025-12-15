@@ -16,6 +16,8 @@
 
 - Se ha identificado un mal funcionamiento en la descarga de csv. Ha sido corregido inmediatamente.
 
+- Se ha identificado que la badge no cumplia el requisito de actualización dinámica. Se ha corregido inmediatamente.
+
 ## Decisiones de diseño
 
 - Se ha implementado Sonarqube solo en la rama main debido a la necesidad de utilizar planes de pago para adaptarlo al workflow propuesto inicialmente.
@@ -30,3 +32,4 @@
   
 - Si un dataset tiene más de una versión, solo aparecerá en el listado de datasets la última. Aun así, mediante las funcionalidades de versionado, pueden comprobarse cuáles son los cambios entre versiones y descargar la más conveniente.
 
+- Se ha decidido que la badge se implemente mediante uso de SVG. Shields.io queda descargado por no poder generar badges en localhost.

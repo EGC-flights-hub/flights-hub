@@ -191,21 +191,17 @@
                         {{ dataset.get_dataset_doi() }}
                     </span>
                 </button>
-
-                <div id="dataset_doi_uvlhub" style="display: none">
-                    {{ dataset.get_dataset_doi() }}
-                </div>
-
-                <button class="btn btn-light btn-sm" onclick="copyBadge('md')">
-                    <i data-feather="clipboard"></i> Copy Markdown Badge
-                </button>
-                <button class="btn btn-light btn-sm" onclick="copyBadge('html')">
-                    <i data-feather="clipboard"></i> Copy HTML Badge
-                </button>
-
             </div>
             {% endif %}
-
+            
+            <div class="mt-3 text-center">
+                    <button class="btn btn-light btn-sm" onclick="copyBadge('md')" style="margin-bottom: 15px;">
+                        <i data-feather="clipboard"></i> Copy Markdown Badge
+                    </button>
+                    <button class="btn btn-light btn-sm" onclick="copyBadge('html')" style="margin-bottom: 15px;">
+                        <i data-feather="clipboard"></i> Copy HTML Badge
+                    </button>
+            </div>
         </div>
 
         {% if related_datasets %}

@@ -48,18 +48,35 @@ def test_dataset_id(test_client):
         db.session.commit()
 
 
+def test_dataset_badge_svg(test_client, test_dataset_id):
+    response = test_client.get(f"/dataset/{test_dataset_id}/badge.svg")
+    assert response.status_code == 200
+    assert "image/svg+xml" in response.content_type
+    assert b"<svg" in response.data
+    assert b"Test Dataset" in response.data or b"Test_Dataset" in response.data
+
+
 def test_dataset_badge_md(test_client, test_dataset_id):
     response = test_client.get(f"/dataset/{test_dataset_id}/badge/md")
     assert response.status_code == 200
-    assert b"![Static Badge]" in response.data
-    assert b"Test_Dataset" in response.data
+    assert response.content_type == "text/plain; charset=utf-8"
+    assert b"![Dataset downloads]" in response.data
+    assert b"/badge.svg" in response.data
 
 
 def test_dataset_badge_html(test_client, test_dataset_id):
     response = test_client.get(f"/dataset/{test_dataset_id}/badge/html")
     assert response.status_code == 200
+    assert response.content_type == "text/plain; charset=utf-8"
     assert b"<img" in response.data
-    assert b"Test_Dataset" in response.data
+    assert b"/badge.svg" in response.data
+    assert b"Dataset downloads" in response.data
+
+
+def test_dataset_badge_invalid_type(test_client, test_dataset_id):
+    response = test_client.get(f"/dataset/{test_dataset_id}/badge/invalid")
+    assert response.status_code == 400
+    assert b"Invalid badge type" in response.data
 
 
 def test_trending_datasets_view(test_client):
