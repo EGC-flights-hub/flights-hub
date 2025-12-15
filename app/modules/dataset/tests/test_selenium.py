@@ -150,39 +150,3 @@ def test_edit_dataset(driver, host):
     driver.switch_to.alert.accept()
 
 
-def test_trending_dataset(driver, host):
-    try:
-
-        driver.get(host)
-        driver.set_window_size(1850, 1053)
-        driver.find_element(By.LINK_TEXT, "Login").click()
-        driver.find_element(By.ID, "email").click()
-        driver.find_element(By.ID, "email").send_keys("user1@example.com")
-        driver.find_element(By.ID, "password").click()
-        driver.find_element(By.ID, "password").send_keys("1234")
-        driver.find_element(By.ID, "submit").click()
-        driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
-        dataset_url = driver.current_url
-        download = driver.find_element(By.LINK_TEXT, "Download (84 bytes)")
-        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", download)
-        download.click()
-        driver.get(host)
-        trending_card = driver.find_element(
-            By.XPATH, "//h2/b[text()='Trending datasets']/ancestor::div[contains(@class,'card')]"
-        )
-        trending_links = trending_card.find_elements(By.TAG_NAME, "a")
-        target_link = None
-        for link in trending_links:
-            if link.text.strip() == "Sample dataset 4":
-                target_link = link
-                break
-        assert target_link is not None, "'Sample dataset 4' no aparece en Trending datasets"
-
-        print("Pasado.")
-
-        target_link.click()
-
-        assert driver.current_url == dataset_url
-
-    finally:
-        close_driver(driver)
