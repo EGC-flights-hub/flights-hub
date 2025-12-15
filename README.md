@@ -12,6 +12,13 @@ Developed by **DiversoLab**, this adaptation, *flights-hub*, integrates data man
 
 ---
 
+## Live deployment
+
+The application is deployed on Render:
+- https://flights-hub.onrender.com
+
+---
+
 ## Features
 
 * Repository of flight-related datasets in CSV format.
