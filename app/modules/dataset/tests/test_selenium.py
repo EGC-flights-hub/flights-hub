@@ -148,5 +148,3 @@ def test_edit_dataset(driver, host):
     version_match = re.search(r"New version: v(\d+)", alert_text)
     assert version_match is not None
     driver.switch_to.alert.accept()
-
-
