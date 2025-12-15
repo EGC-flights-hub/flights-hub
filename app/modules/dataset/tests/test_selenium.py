@@ -102,7 +102,7 @@ def test_index():
 
         try:
             test_badge(driver, host)
-            #  test_download_count(driver, host)  NO FUNCIONA
+            test_download_count(driver, host)
             test_trending_dataset(driver, host)
 
         except NoSuchElementException:
