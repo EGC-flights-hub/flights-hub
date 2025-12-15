@@ -16,6 +16,7 @@
 
 - Se ha identificado un mal funcionamiento en la descarga de csv. Ha sido corregido inmediatamente.
 
+- Se ha identificado que la badge no cumplia el requisito de actualización dinámica. Se ha corregido inmediatamente.
 ## Decisiones de diseño
 
 - Se ha implementado Sonarqube solo en la rama main debido a la necesidad de utilizar planes de pago para adaptarlo al workflow propuesto inicialmente.
@@ -23,3 +24,5 @@
 - Dado que solo se van a utilizar CSV, eliminar todo lo referente a UVL y sobrescribirlo para CSV. Eliminación de test e implementación de featureModel, realizando un modelo mucho más simple que solo trabaja con dataset y csv.
 
 - Se ha decidido que el "Documento del proyecto" descrito en el Acta fundacional sea el ReadMe y el contenido de este ha sido extendido.
+
+- Se ha decidido que la badge se implemente mediante uso de SVG. Shields.io queda descargado por no poder generar badges en localhost.
