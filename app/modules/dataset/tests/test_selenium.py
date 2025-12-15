@@ -89,35 +89,6 @@ def test_trending_dataset(driver, host):
     assert driver.current_url == dataset_url
 
 
-def test_index():
-
-    driver = initialize_driver()
-
-    try:
-        host = get_host_for_selenium_testing()
-
-        # Open the index page
-        driver.get(f"{host}/webhook")
-        # I hate selenium
-
-        try:
-            test_badge(driver, host)
-            test_download_count(driver, host)
-            test_trending_dataset(driver, host)
-
-        except NoSuchElementException:
-            raise AssertionError("Test failed!")
-
-    finally:
-
-        # Close the browser
-        close_driver(driver)
-
-
-# Call the test function
-test_index()
-
-
 def test_edit_dataset(driver, host):
     driver.get(host)
     driver.set_window_size(1850, 1053)
@@ -148,3 +119,29 @@ def test_edit_dataset(driver, host):
     version_match = re.search(r"New version: v(\d+)", alert_text)
     assert version_match is not None
     driver.switch_to.alert.accept()
+
+
+def test_index():
+
+    driver = initialize_driver()
+
+    try:
+        host = get_host_for_selenium_testing()
+
+        # Open the index page
+        driver.get(f"{host}/webhook")
+        # I hate selenium
+        test_badge(driver, host)
+        test_download_count(driver, host)
+        test_recomendation(driver, host)
+        test_trending_dataset(driver, host)
+       # test_edit_dataset(driver, host)
+
+    finally:
+
+        # Close the browser
+        close_driver(driver)
+
+
+# Call the test function
+test_index()
