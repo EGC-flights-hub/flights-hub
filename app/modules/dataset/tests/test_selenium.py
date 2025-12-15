@@ -1,7 +1,6 @@
 import re
 
 import pytest
-from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -57,32 +56,38 @@ def test_recomendation(driver, host):
     driver.find_element(By.CSS_SELECTOR, ".list-group-item:nth-child(5) > .d-flex > .mb-1").click()
 
 
-def test_index():
+def test_trending_dataset(driver, host):
 
-    driver = initialize_driver()
+    driver.get(host)
+    driver.set_window_size(1850, 1053)
+    driver.find_element(By.LINK_TEXT, "Login").click()
+    driver.find_element(By.ID, "email").click()
+    driver.find_element(By.ID, "email").send_keys("user1@example.com")
+    driver.find_element(By.ID, "password").click()
+    driver.find_element(By.ID, "password").send_keys("1234")
+    driver.find_element(By.ID, "submit").click()
+    driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
+    dataset_url = driver.current_url
+    download = driver.find_element(By.LINK_TEXT, "Download (84 bytes)")
+    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", download)
+    download.click()
+    driver.get(host)
+    trending_card = driver.find_element(
+        By.XPATH, "//h2/b[text()='Trending datasets']/ancestor::div[contains(@class,'card')]"
+    )
+    trending_links = trending_card.find_elements(By.TAG_NAME, "a")
+    target_link = None
+    for link in trending_links:
+        if link.text.strip() == "Sample dataset 4":
+            target_link = link
+            break
+    assert target_link is not None, "'Sample dataset 4' no aparece en Trending datasets"
 
-    try:
-        host = get_host_for_selenium_testing()
+    target_link.click()
 
-        # Open the index page
-        driver.get(f"{host}/webhook")
-        # I hate selenium
-
-        try:
-            test_badge(driver, host)
-            test_download_count(driver, host)
-
-        except NoSuchElementException:
-            raise AssertionError("Test failed!")
-
-    finally:
-
-        # Close the browser
-        close_driver(driver)
-
-
-# Call the test function
-test_index()
+    assert driver.current_url == dataset_url
+    driver.find_element(By.LINK_TEXT, "Doe, John").click()
+    driver.find_element(By.LINK_TEXT, "Log out").click()
 
 
 def test_edit_dataset(driver, host):
@@ -115,3 +120,29 @@ def test_edit_dataset(driver, host):
     version_match = re.search(r"New version: v(\d+)", alert_text)
     assert version_match is not None
     driver.switch_to.alert.accept()
+
+
+def test_index():
+
+    driver = initialize_driver()
+
+    try:
+        host = get_host_for_selenium_testing()
+
+        # Open the index page
+        driver.get(f"{host}/webhook")
+        # I hate selenium
+        test_badge(driver, host)
+        test_download_count(driver, host)
+        test_recomendation(driver, host)
+        test_trending_dataset(driver, host)
+        test_edit_dataset(driver, host)
+
+    finally:
+
+        # Close the browser
+        close_driver(driver)
+
+
+# Call the test function
+test_index()
