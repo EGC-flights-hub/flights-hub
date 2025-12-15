@@ -86,6 +86,8 @@ def test_trending_dataset(driver, host):
     target_link.click()
 
     assert driver.current_url == dataset_url
+    driver.find_element(By.LINK_TEXT, "Doe, John").click()
+    driver.find_element(By.LINK_TEXT, "Log out").click()
 
 
 def test_edit_dataset(driver, host):
@@ -134,7 +136,7 @@ def test_index():
         test_download_count(driver, host)
         test_recomendation(driver, host)
         test_trending_dataset(driver, host)
-    # test_edit_dataset(driver, host)
+        test_edit_dataset(driver, host)
 
     finally:
 
