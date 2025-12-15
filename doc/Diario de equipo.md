@@ -36,3 +36,5 @@
 - Se ha decidido crear únicamente un test de creación de nueva versión debido a que los test de selenium generados por la IDE no ofrecen la precisión necesaria y se rompen si no se replica el caso exactamente (aunque la base de datos esté exactamente igual).
 
 - Dado que Sonarqube se implementa solo en main, y que Trivy y Dependency check ejecutan análisis sobre configuraciones y dependencias que no son algo que cambien demasiado en cada commit; se ha decidido (a partir del M2, M2 incluido) que los reportes de seguridad serían revisados ante cada Milestone.
+
+- Como el ciclo CICD está centrado en la Seguridad más que en la mantenibilidad del código (porque este proyecto dejará de ser mantenido una vez finalizada la asignatura), los bad smells de sonarqube que salían inicialmente en el proyecto relacionados on esta; y los bad smells que sean el mismo tipo de error en nuestro códigos serán deprecados.
