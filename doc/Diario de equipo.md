@@ -14,9 +14,15 @@
 
 - Se ha notificado formalmente al compañero Samuel por su inactividad siguiendo el proceso declarado en el acta fundacional.
 
+- Se encontró el antiguo logo de uvlhub en la página de error 404. Se corrigió inmediatamente.
+
 - Se ha identificado un mal funcionamiento en la descarga de csv. Ha sido corregido inmediatamente.
 
 - Se ha identificado que la badge no cumplia el requisito de actualización dinámica. Se ha corregido inmediatamente.
+
+- Se ha añadido como incidencia (aunque fue un falso positivo) la no actualización de los despliegues de preproducción al subir cambios. Resultó ser un falso positivo pero como el equipo se mantuvo un buen rato buscando el error; queda registrado de cara al futuro.
+
+
 ## Decisiones de diseño
 
 - Se ha implementado Sonarqube solo en la rama main debido a la necesidad de utilizar planes de pago para adaptarlo al workflow propuesto inicialmente.
@@ -26,3 +32,7 @@
 - Se ha decidido que el "Documento del proyecto" descrito en el Acta fundacional sea el ReadMe y el contenido de este ha sido extendido.
 
 - Se ha decidido que la badge se implemente mediante uso de SVG. Shields.io queda descargado por no poder generar badges en localhost.
+
+- Se ha decidido crear únicamente un test de creación de nueva versión debido a que los test de selenium generados por la IDE no ofrecen la precisión necesaria y se rompen si no se replica el caso exactamente (aunque la base de datos esté exactamente igual).
+
+- Dado que Sonarqube se implementa solo en main, y que Trivy y Dependency check ejecutan análisis sobre configuraciones y dependencias que no son algo que cambien demasiado en cada commit; se ha decidido (a partir del M2, M2 incluido) que los reportes de seguridad serían revisados ante cada Milestone.
