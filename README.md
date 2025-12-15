@@ -17,6 +17,10 @@ Developed by **DiversoLab**, this adaptation, *flights-hub*, integrates data man
 The application is deployed on Render:
 - https://flights-hub.onrender.com
 
+We also have a pre-production deploy:
+
+- https://flights-hub-preprod.onrender.com/
+
 ---
 
 ## Features
